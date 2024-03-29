@@ -28,8 +28,7 @@ class Recipe(models.Model):
         )
     tag = models.ForeignKey(
         'Tag',
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.CASCADE,
         verbose_name='Тэг'
         )
     cook_time = models.TimeField(verbose_name='Время приготовления')
