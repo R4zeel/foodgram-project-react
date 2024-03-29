@@ -4,13 +4,13 @@ from rest_framework import serializers
 from django.core.files.base import ContentFile
 import webcolors
 
-from .models import Recipe
+from .models import Recipe, Ingredient, Tag
 
 
 class Hex2NameColor(serializers.Field):
     def to_representation(self, value):
         return value
-    
+
     def to_internal_value(self, data):
         try:
             data = webcolors.hex_to_name(data)
@@ -28,8 +28,32 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
+class TagSerializer(serializers.ModelSerializer):
+    color = Hex2NameColor()
+
+    class Meta:
+        model = Tag
+        fields = ('name', 'color', 'slug')
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ('name', 'measure')
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
+    ingredients = IngredientSerializer
+    tag = TagSerializer
+
     class Meta:
         model = Recipe
-        fields = ('name', 'description', 'image')
+        fields = (
+            'name',
+            'description',
+            'image',
+            'ingredients',
+            'tag',
+            'cook_time'
+        )

@@ -54,7 +54,7 @@ class Ingredient(models.Model):
         verbose_name='Название',
         max_length=LENGTH_FOR_CHARFIELD
         )
-    metric = models.CharField(
+    measure = models.CharField(
         verbose_name='Единица измерения',
         max_length=LENGTH_FOR_CHARFIELD
         )
