@@ -26,6 +26,19 @@ class ApiUser(AbstractUser):
     last_name = models.CharField(max_length=LENGTH_FOR_CHARFIELD)
     role = models.CharField(max_length=LENGTH_FOR_CHARFIELD)
 
+    @property
+    def is_admin(self):
+        return (self.role == 'admin'
+                or self.is_superuser
+                or self.is_staff)
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
+
+    def __str__(self):
+        return self.username
+
 
 class Follow(models.Model):
     follower = models.ForeignKey(
