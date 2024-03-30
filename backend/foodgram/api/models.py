@@ -21,17 +21,18 @@ class Recipe(models.Model):
         verbose_name='Описание',
         max_length=LENGTH_FOR_TEXTFIELD
         )
-    ingredients = models.ForeignKey(
+    ingredients = models.ManyToManyField(
         'Ingredient',
-        on_delete=models.CASCADE,
         verbose_name='Ингредиенты'
         )
-    tag = models.ForeignKey(
+    tag = models.ManyToManyField(
         'Tag',
-        on_delete=models.CASCADE,
         verbose_name='Тэг'
         )
     cook_time = models.TimeField(verbose_name='Время приготовления')
+
+    def __str__(self):
+        return self.name
 
 
 class Tag(models.Model):
@@ -47,6 +48,9 @@ class Tag(models.Model):
         verbose_name='Слаг'
     )
 
+    def __str__(self):
+        return self.name
+
 
 class Ingredient(models.Model):
     name = models.CharField(
@@ -57,3 +61,6 @@ class Ingredient(models.Model):
         verbose_name='Единица измерения',
         max_length=LENGTH_FOR_CHARFIELD
         )
+
+    def __str__(self):
+        return self.name

@@ -8,27 +8,3 @@ LENGTH_FOR_TEXTFIELD = 128
 
 APP_LABEL = 'api'
 """Название приложения для вызова класса модели."""
-
-# GRAM = 'GR'
-
-# LITER = 'L'
-
-# MILLILITER = 'ML'
-
-# AMOUNT = 'AMOUNT'
-
-# TABLESPOON = 'TBSP'
-
-# TEASPOON = 'TSP'
-
-# CUP = 'CUP'
-
-# HANDFUL = 'HF'
-
-# DROP = 'DROP'
-
-# TO_TASTE = 'TO_TASTE'
-
-# MEASURE_CHOICES = (
-
-# )
