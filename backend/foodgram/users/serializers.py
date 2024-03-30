@@ -1,7 +1,21 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+from djoser.serializers import UserSerializer
 
 from .models import ApiUser, Follow
+
+
+class ApiUserSerializer(UserSerializer):
+    class Meta:
+        model = ApiUser
+        fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'role'
+        )
 
 
 class FollowSerializer(serializers.ModelSerializer):

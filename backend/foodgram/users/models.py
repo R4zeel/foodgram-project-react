@@ -16,7 +16,6 @@ class ApiUser(AbstractUser):
         unique=True,
         verbose_name='Имя пользователя'
     )
-    password = models.CharField(max_length=LENGTH_FOR_CHARFIELD)
     email = models.EmailField(
         max_length=LENGTH_FOR_CHARFIELD,
         unique=True,
