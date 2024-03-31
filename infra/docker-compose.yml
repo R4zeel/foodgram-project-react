@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     env_file: .env
     volumes:
-      - static:/app/collected_static
+      - static:/app/staticfiles
       - media:/app/media
   frontend:
     build:
@@ -33,3 +33,4 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+      - static:/app/staticfiles
