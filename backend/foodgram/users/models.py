@@ -39,17 +39,17 @@ class ApiUser(AbstractUser):
         return self.username
 
 
-class Follow(models.Model):
-    follower = models.ForeignKey(
+class Subscription(models.Model):
+    subscriber = models.ForeignKey(
         ApiUser,
         on_delete=models.CASCADE,
-        related_name='follower'
+        related_name='subscriber'
     )
-    following = models.ForeignKey(
+    subscribed = models.ForeignKey(
         ApiUser,
         on_delete=models.CASCADE,
-        related_name='following'
+        related_name='subscribed'
     )
 
     def __str__(self):
-        return self.following.username
+        return self.subscribed.username

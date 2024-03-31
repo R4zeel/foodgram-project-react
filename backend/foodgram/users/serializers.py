@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from djoser.serializers import UserSerializer
 
-from .models import ApiUser, Follow
+from .models import ApiUser, Subscription
 
 
 class ApiUserSerializer(UserSerializer):
@@ -18,29 +18,29 @@ class ApiUserSerializer(UserSerializer):
         )
 
 
-class FollowSerializer(serializers.ModelSerializer):
-    follower = serializers.StringRelatedField(
+class SubscriptionSerializer(serializers.ModelSerializer):
+    subscriber = serializers.StringRelatedField(
         required=False,
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
-    following = serializers.SlugRelatedField(
+    subscribed = serializers.SlugRelatedField(
         slug_field='username',
         queryset=ApiUser.objects.all()
     )
 
     class Meta:
-        model = Follow
-        fields = ('follower', 'following')
+        model = Subscription
+        fields = ('subscriber', 'subscribed')
         validators = [
             UniqueTogetherValidator(
-                queryset=Follow.objects.all(),
-                fields=['follower', 'following']
+                queryset=Subscription.objects.all(),
+                fields=['subscriber', 'subscribed']
             )
         ]
 
     def validate(self, attrs):
-        if attrs['following'] == self.context['request'].user:
+        if attrs['subscribed'] == self.context['request'].user:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
             )

@@ -1,12 +1,12 @@
 from rest_framework import viewsets
 
-from .models import ApiUser, Follow
-from .serializers import FollowSerializer
+from .models import ApiUser, Subscription
+from .serializers import SubscriptionSerializer
 
 
-class FollowViewSet(viewsets.ModelViewSet):
-    queryset = Follow.objects.all()
-    serializer_class = FollowSerializer
+class SubscribeViewSet(viewsets.ModelViewSet):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionSerializer
 
     def get_queryset(self):
         user = self.request.user
