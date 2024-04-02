@@ -1,4 +1,5 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -37,6 +38,16 @@ class ApiUserViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    @action(
+        methods=['GET'],
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+        url_path='me'
+    )
+    def user_detail(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
 
 class ObtainTokenView(ObtainAuthToken):
     serializer_class = ObtainTokenSerializer
@@ -49,6 +60,13 @@ class ObtainTokenView(ObtainAuthToken):
         return Response(
             {'auth_token': str(token)}
         )
+
+
+class DestroyTokenView(APIView):
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        Token.objects.filter(user=user).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):
