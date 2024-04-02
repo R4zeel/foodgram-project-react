@@ -11,6 +11,9 @@ class ApiUser(AbstractUser):
         MODERATOR = 'moderator', 'Модератор'
         ADMIN = 'admin', 'Администратор'
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username',)
+
     username = models.CharField(
         max_length=LENGTH_FOR_CHARFIELD,
         unique=True,

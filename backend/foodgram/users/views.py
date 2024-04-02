@@ -1,7 +1,23 @@
 from rest_framework import viewsets
+from djoser.views import UserViewSet
+from rest_framework_simplejwt.views import TokenViewBase
 
 from .models import ApiUser, Subscription
-from .serializers import SubscriptionSerializer
+from .serializers import (SubscriptionSerializer,
+                          ApiUserSerializer,
+                          ApiTokenObtainSerializer)
+
+
+class ApiUserViewSet(UserViewSet):
+    queryset = ApiUser.objects.all()
+    serializer_class = ApiUserSerializer
+
+    def get_queryset(self):
+        return self.request.user
+
+
+class ApiTokenObtainView(TokenViewBase):
+    serializer_class = ApiTokenObtainSerializer
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):

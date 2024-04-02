@@ -1,5 +1,8 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
+from rest_framework_simplejwt.tokens import AccessToken
 from djoser.serializers import UserSerializer
 
 from .models import ApiUser, Subscription
@@ -8,14 +11,22 @@ from .models import ApiUser, Subscription
 class ApiUserSerializer(UserSerializer):
     class Meta:
         model = ApiUser
-        fields = (
-            'id',
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'role'
-        )
+        fields = ('id', 'email', 'first_name', 'last_name', 'username', 'role')
+
+
+class ApiTokenObtainSerializer(TokenObtainSerializer):
+    email = serializers.CharField(required=True)
+    token_class = AccessToken
+
+    class Meta:
+        model = ApiUser
+        fields = ('email',)
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        access = self.get_token(self.user)
+        data["auth_token"] = str(access)
+        return data
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
