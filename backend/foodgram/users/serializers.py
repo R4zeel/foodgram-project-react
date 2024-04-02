@@ -1,32 +1,36 @@
-from django.shortcuts import get_object_or_404
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from rest_framework_simplejwt.tokens import AccessToken
-from djoser.serializers import UserSerializer
 
 from .models import ApiUser, Subscription
 
 
-class ApiUserSerializer(UserSerializer):
+class ApiUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiUser
         fields = ('id', 'email', 'first_name', 'last_name', 'username', 'role')
 
 
-class ApiTokenObtainSerializer(TokenObtainSerializer):
-    email = serializers.CharField(required=True)
-    token_class = AccessToken
-
-    class Meta:
-        model = ApiUser
-        fields = ('email',)
+class ObtainTokenSerializer(serializers.Serializer):
+    email = serializers.CharField(max_length=128, required=True)
+    password = serializers.CharField(max_length=128, required=True)
 
     def validate(self, attrs):
-        data = super().validate(attrs)
-        access = self.get_token(self.user)
-        data["auth_token"] = str(access)
-        return data
+        email = attrs.get('email')
+        password = attrs.get('password')
+        if not email and not password:
+            raise serializers.ValidationError(
+                'Все поля обязательны к заполнению'
+            )
+        user = authenticate(
+            request=self.context.get('request'),
+            email=email,
+            password=password
+        )
+        if not user:
+            raise serializers.ValidationError('Введены некорректные данные')
+        attrs['user'] = user
+        return attrs
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
