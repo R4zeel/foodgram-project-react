@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -6,9 +7,23 @@ from .models import ApiUser, Subscription
 
 
 class ApiUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = ApiUser
-        fields = ('id', 'email', 'first_name', 'last_name', 'username', 'role')
+        fields = (
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'username',
+            'password'
+        )
+
+    def validate(self, attrs):
+        password = attrs.get('password')
+        attrs['password'] = make_password(password)
+        return attrs
 
 
 class SetPasswordSerializer(serializers.Serializer):
@@ -33,7 +48,9 @@ class ObtainTokenSerializer(serializers.Serializer):
             password=password
         )
         if not user:
-            raise serializers.ValidationError('Введены некорректные данные')
+            raise serializers.ValidationError(
+                'Введены некорректные данные.'
+            )
         attrs['user'] = user
         return attrs
 

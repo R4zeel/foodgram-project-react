@@ -17,7 +17,7 @@ class Recipe(models.Model):
         max_length=LENGTH_FOR_TEXTFIELD
         )
     image = models.ImageField()
-    description = models.TextField(
+    text = models.TextField(
         verbose_name='Описание',
         max_length=LENGTH_FOR_TEXTFIELD
         )
@@ -25,14 +25,16 @@ class Recipe(models.Model):
         'Ingredient',
         verbose_name='Ингредиенты'
         )
-    tag = models.ManyToManyField(
+    tags = models.ManyToManyField(
         'Tag',
-        verbose_name='Тэг'
+        verbose_name='Тэги'
         )
-    cook_time = models.CharField(
+    cooking_time = models.CharField(
         verbose_name='Время приготовления',
         max_length=LENGTH_FOR_CHARFIELD
     )
+    is_favorited = models.BooleanField()
+    is_in_shopping_cart = models.BooleanField()
 
     def __str__(self):
         return self.name

@@ -24,9 +24,22 @@ class ApiUser(AbstractUser):
         unique=True,
         verbose_name='Почта'
     )
-    first_name = models.CharField(max_length=LENGTH_FOR_CHARFIELD)
-    last_name = models.CharField(max_length=LENGTH_FOR_CHARFIELD)
-    role = models.CharField(max_length=LENGTH_FOR_CHARFIELD)
+    password = models.CharField(
+        max_length=LENGTH_FOR_CHARFIELD,
+        verbose_name='Пароль',
+    )
+    first_name = models.CharField(
+        max_length=LENGTH_FOR_CHARFIELD,
+        verbose_name='Имя'
+    )
+    last_name = models.CharField(
+        max_length=LENGTH_FOR_CHARFIELD,
+        verbose_name='Фамилия'
+    )
+    role = models.CharField(
+        max_length=LENGTH_FOR_CHARFIELD,
+        verbose_name='Роль'
+    )
 
     @property
     def is_admin(self):

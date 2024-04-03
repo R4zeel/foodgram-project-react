@@ -25,20 +25,20 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'author',
         'name',
-        'description',
+        'text',
         'image',
         'get_ingredients',
-        'get_tag',
-        'cook_time'
+        'get_tags',
+        'cooking_time'
     )
-    filter_horizontal = ('ingredients', 'tag')
+    filter_horizontal = ('ingredients', 'tags')
 
     def get_ingredients(self, obj):
         return ' ,'.join(
             [ingredient.name for ingredient in obj.ingredients.all()]
         )
 
-    def get_tag(self, obj):
+    def get_tags(self, obj):
         return ' ,'.join(
-            [tag.name for tag in obj.tag.all()]
+            [tag.name for tag in obj.tags.all()]
         )
