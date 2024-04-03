@@ -29,7 +29,10 @@ class Recipe(models.Model):
         'Tag',
         verbose_name='Тэг'
         )
-    cook_time = models.TimeField(verbose_name='Время приготовления')
+    cook_time = models.CharField(
+        verbose_name='Время приготовления',
+        max_length=LENGTH_FOR_CHARFIELD
+    )
 
     def __str__(self):
         return self.name
