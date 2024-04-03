@@ -9,7 +9,8 @@ from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer
 class ListViewSet(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   viewsets.GenericViewSet):
-    pass
+    permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 class IngredientViewSet(ListViewSet):
@@ -20,10 +21,6 @@ class IngredientViewSet(ListViewSet):
 class TagViewSet(ListViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (AllowAny,)
-    pagination_class = None
-
-
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

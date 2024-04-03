@@ -1,6 +1,5 @@
 from pathlib import Path
 import csv
-from sqlite3 import IntegrityError
 
 from django.core.management.base import BaseCommand
 from django.apps import apps
