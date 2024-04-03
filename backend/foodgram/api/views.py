@@ -1,9 +1,11 @@
 from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Recipe, Ingredient, Tag
 from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer
+from .filters import IngredientSearchFilter
 
 
 class ListViewSet(mixins.ListModelMixin,
@@ -16,6 +18,8 @@ class ListViewSet(mixins.ListModelMixin,
 class IngredientViewSet(ListViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientSearchFilter
 
 
 class TagViewSet(ListViewSet):
