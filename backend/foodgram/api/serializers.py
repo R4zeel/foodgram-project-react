@@ -7,16 +7,16 @@ import webcolors
 from .models import Recipe, Ingredient, Tag
 
 
-class Hex2NameColor(serializers.Field):
+class Name2HexColor(serializers.Field):
     def to_representation(self, value):
         return value
 
     def to_internal_value(self, data):
         try:
-            data = webcolors.hex_to_name(data)
+            data = webcolors.name_to_hex(data)
         except ValueError:
             raise serializers.ValidationError(
-                'Для этого цвета нет названия'
+                'Для этого цвета нет кода'
             )
         return data
 
@@ -31,11 +31,11 @@ class Base64ImageField(serializers.ImageField):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    color = Hex2NameColor()
+    color = Name2HexColor()
 
     class Meta:
         model = Tag
-        fields = ('name', 'color', 'slug')
+        fields = ('id', 'name', 'color', 'slug')
 
 
 class IngredientSerializer(serializers.ModelSerializer):

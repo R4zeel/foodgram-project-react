@@ -11,6 +11,11 @@ class ApiUserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'first_name', 'last_name', 'username', 'role')
 
 
+class SetPasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+
 class ObtainTokenSerializer(serializers.Serializer):
     email = serializers.CharField(max_length=128, required=True)
     password = serializers.CharField(max_length=128, required=True)

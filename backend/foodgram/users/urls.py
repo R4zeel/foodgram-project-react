@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (SubscribeViewSet,
                     ApiUserViewSet,
                     ObtainTokenView,
-                    DestroyTokenView)
+                    DestroyTokenView,)
 
 users_router = DefaultRouter()
 users_router.register('users', ApiUserViewSet, basename='user')

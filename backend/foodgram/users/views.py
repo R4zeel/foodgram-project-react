@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,7 +10,8 @@ from rest_framework.authtoken.models import Token
 from .models import ApiUser, Subscription
 from .serializers import (SubscriptionSerializer,
                           ApiUserSerializer,
-                          ObtainTokenSerializer)
+                          ObtainTokenSerializer,
+                          SetPasswordSerializer)
 
 
 class ApiUserViewSet(viewsets.ModelViewSet):
@@ -44,9 +46,33 @@ class ApiUserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
         url_path='me'
     )
-    def user_detail(self, request):
+    def self_user_detail(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    @action(
+        methods=['GET'],
+        detail=False,
+    )
+    def user_detail(self, request, pk=None):
+        user = get_object_or_404(ApiUser, id=pk)
+        serializer = self.get_serializer(data=user)
+        return Response(serializer.data)
+
+    @action(
+        methods=['POST'],
+        detail=False,
+        permission_classes=(AllowAny,),
+        url_path='set_password'
+    )
+    def reset_password(self, request):
+        serializer = SetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.request.user.set_password(
+            serializer.data['new_password']
+        )
+        self.request.user.save()
+        return Response('OK', status=status.HTTP_204_NO_CONTENT)
 
 
 class ObtainTokenView(ObtainAuthToken):
