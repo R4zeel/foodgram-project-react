@@ -31,7 +31,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'get_tags',
         'cooking_time'
     )
-    filter_horizontal = ('ingredients', 'tags')
+    filter_horizontal = ('tags',)
 
     def get_ingredients(self, obj):
         return ' ,'.join(

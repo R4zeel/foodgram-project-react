@@ -23,15 +23,15 @@ class Recipe(models.Model):
         )
     ingredients = models.ManyToManyField(
         'Ingredient',
+        through='RecipeIngredient',
         verbose_name='Ингредиенты'
         )
     tags = models.ManyToManyField(
         'Tag',
         verbose_name='Тэги'
         )
-    cooking_time = models.CharField(
+    cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
-        max_length=LENGTH_FOR_CHARFIELD
     )
     is_favorited = models.BooleanField()
     is_in_shopping_cart = models.BooleanField()
@@ -69,3 +69,9 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    amount = models.PositiveSmallIntegerField(verbose_name='Количество')

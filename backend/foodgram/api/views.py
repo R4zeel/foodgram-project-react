@@ -1,17 +1,17 @@
 from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
+from rest_framework import permissions
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Recipe, Ingredient, Tag
-from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer
+from .serializers import RecipeSerializerForRead,IngredientSerializer, TagSerializer, RecipeSerializerForWrite
 from .filters import IngredientSearchFilter
 
 
 class ListViewSet(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   viewsets.GenericViewSet):
-    permission_classes = (AllowAny,)
+    permission_classes = (permissions.AllowAny,)
     pagination_class = None
 
 
@@ -29,8 +29,13 @@ class TagViewSet(ListViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    permission_classes = (AllowAny,)
+    serializer_class = RecipeSerializerForRead
+    permission_classes = (permissions.AllowAny,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method not in permissions.SAFE_METHODS:
+            return RecipeSerializerForWrite
+        return RecipeSerializerForRead
