@@ -74,4 +74,10 @@ class Ingredient(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.PositiveSmallIntegerField(verbose_name='Количество')
+    amount = models.PositiveSmallIntegerField(verbose_name='Количество',)
+
+    class Meta:
+        default_related_name = 'recipe_ingredients'
+
+    def __str__(self):
+        return self.ingredient.name

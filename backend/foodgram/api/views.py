@@ -1,4 +1,6 @@
-from rest_framework import viewsets, mixins
+from requests.models import Response
+from rest_framework import viewsets, mixins, filters
+from rest_framework.exceptions import APIException
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,8 +20,9 @@ class ListViewSet(mixins.ListModelMixin,
 class IngredientViewSet(ListViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = IngredientSearchFilter
+    ordering_fields = ('name',)
 
 
 class TagViewSet(ListViewSet):
@@ -39,3 +42,4 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.method not in permissions.SAFE_METHODS:
             return RecipeSerializerForWrite
         return RecipeSerializerForRead
+
