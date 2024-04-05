@@ -1,12 +1,14 @@
-from requests.models import Response
-from rest_framework import viewsets, mixins, filters
-from rest_framework.exceptions import APIException
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework import viewsets, mixins, filters, status
+from rest_framework.decorators import action
 from rest_framework import permissions
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Recipe, Ingredient, Tag
-from .serializers import RecipeSerializerForRead,IngredientSerializer, TagSerializer, RecipeSerializerForWrite
+from .serializers import (RecipeSerializerForRead,
+                          IngredientSerializer,
+                          TagSerializer,
+                          RecipeSerializerForWrite)
 from .filters import IngredientSearchFilter
 
 
@@ -42,4 +44,52 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.method not in permissions.SAFE_METHODS:
             return RecipeSerializerForWrite
         return RecipeSerializerForRead
+
+    # TODO: Не работают методы DEL из-за непонятной ошибки Nginx
+    @action(
+        methods=['POST', 'DELETE'],
+        detail=True,
+        url_path='favorite'
+    )
+    def favorites(self, request, pk=None):
+        recipe = self.get_object()
+        if request.method == 'DELETE':
+            recipe.is_favorited = False
+            recipe.save()
+            return Response('OK', status=status.HTTP_204_NO_CONTENT)
+        recipe.is_favorited = True
+        recipe.save()
+        return Response(
+            {
+                'id': recipe.id,
+                'name': recipe.name,
+                'image': recipe.image.url,
+                'cooking_time': recipe.cooking_time
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(
+        methods=['POST', 'DELETE'],
+        detail=True,
+        url_path='shopping_cart'
+    )
+    def shopping_cart(self, request, pk=None):
+        recipe = self.get_object()
+        if request.method == 'DELETE':
+            recipe.is_in_shopping_cart = False
+            recipe.save()
+            return Response('OK', status=status.HTTP_204_NO_CONTENT)
+        recipe.is_in_shopping_cart = True
+        recipe.save()
+        return Response(
+            {
+                'id': recipe.id,
+                'name': recipe.name,
+                'image': recipe.image.url,
+                'cooking_time': recipe.cooking_time
+            },
+            status=status.HTTP_201_CREATED
+        )
+
 

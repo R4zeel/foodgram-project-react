@@ -29,19 +29,11 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit',)
 
 
-# class RecipeIngredientSerializer(serializers.ModelSerializer):
-#     id = serializers.PrimaryKeyRelatedField(source='ingredient__id', read_only=True)
-#     name = serializers.StringRelatedField(source='ingredient__name', read_only=True)
-#     measurement_unit = serializers.StringRelatedField(source='ingredient__measurement_unit', read_only=True)
-#
-#     class Meta:
-#         model = RecipeIngredient
-#         fields = ('id', 'name', 'measurement_unit',)
-
-
 class RecipeSerializerForRead(serializers.ModelSerializer):
     image = Base64ImageField()
-    ingredients = serializers.SerializerMethodField('get_ingredients_with_amount')
+    ingredients = serializers.SerializerMethodField(
+        'get_ingredients_with_amount'
+    )
     tags = TagSerializer(many=True)
     author = ApiUserSerializer(read_only=True)
 

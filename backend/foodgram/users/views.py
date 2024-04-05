@@ -59,6 +59,7 @@ class ApiUserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=user)
         return Response(serializer.data)
 
+    # TODO: Срабатывает ошибка Nginx, метод не работает
     @action(
         methods=['POST'],
         detail=False,
