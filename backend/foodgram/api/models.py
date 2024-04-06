@@ -38,6 +38,7 @@ class Recipe(models.Model):
         return self.name
 
 
+# TODO: добавить colorfield для hex кодов
 class Tag(models.Model):
     name = models.CharField(
         max_length=LENGTH_FOR_CHARFIELD,
@@ -84,10 +85,14 @@ class RecipeIngredient(models.Model):
 class FavoriteRecipe(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    is_favorited = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.recipe.name
 
 
 class InShoppingCartRecipe(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    is_in_shopping_cart = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.recipe.name

@@ -3,8 +3,15 @@ import base64
 from rest_framework import serializers
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
+from rest_framework.validators import UniqueTogetherValidator
 
-from .models import Recipe, Ingredient, Tag, RecipeIngredient
+from .models import (Recipe, 
+                    Ingredient,
+                    Tag,
+                    RecipeIngredient,
+                    FavoriteRecipe,
+                    InShoppingCartRecipe,
+                    User)
 from users.serializers import ApiUserSerializer
 
 
@@ -44,8 +51,6 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
             'tags',
             'author',
             'ingredients',
-            'is_favorited',
-            'is_in_shopping_cart',
             'name',
             'image',
             'text',
@@ -68,8 +73,6 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
 
 class RecipeSerializerForWrite(serializers.ModelSerializer):
     image = Base64ImageField()
-    is_favorited = serializers.BooleanField(default=False)
-    is_in_shopping_cart = serializers.BooleanField(default=False)
 
     class Meta:
         model = Recipe
@@ -77,8 +80,6 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             'id',
             'tags',
             'ingredients',
-            'is_favorited',
-            'is_in_shopping_cart',
             'name',
             'image',
             'text',
@@ -98,3 +99,41 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
     def to_representation(self, instance):
         return RecipeSerializerForRead(instance=instance).data
 
+    
+
+class FavoriteRecipeSerializerForRead(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+
+class FavoriteRecipeSerializerForWrite(serializers.ModelSerializer):
+    recipe = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+        )
+
+    class Meta:
+        model = FavoriteRecipe
+        fields = ('recipe', 'user',)
+
+    def validate(self, attrs):
+        attrs['user'] = self.context['request'].user
+        attrs['recipe_id'] = self.context['recipe_id']
+        if FavoriteRecipe.objects.filter(
+            user=self.context['request'].user,
+            recipe=self.context['recipe_id']
+        ).exists():
+            raise serializers.ValidationError('Рецепт уже в избранном')
+        return attrs
+
+    def to_representation(self, instance):
+        return FavoriteRecipeSerializerForRead(
+            instance=Recipe.objects.get(
+                id=instance.recipe_id
+                )
+            ).data
+    

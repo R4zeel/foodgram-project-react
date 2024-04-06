@@ -26,6 +26,9 @@ class ApiUserSerializer(serializers.ModelSerializer):
         attrs['password'] = make_password(password)
         return attrs
 
+    def get_is_subscribed(self):
+        pass
+
 
 class SetPasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField(required=True)
@@ -56,43 +59,41 @@ class ObtainTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class SubscriptionSerializerForRead(serializers.ModelSerializer):
-    email = serializers.CharField()
-    is_subscribed = serializers.BooleanField(default=True)
+# class SubscriptionSerializerForRead(serializers.ModelSerializer):
+#     email = serializers.CharField(source='subscriber.email')
 
-    class Meta:
-        model = Subscription
-        fields = (
-            'email',
-            'is_subscribed'
-        )
+#     class Meta:
+#         model = Subscription
+#         fields = (
+#             'email',
+#         )
 
 
-class SubscriptionSerializerForWrite(serializers.ModelSerializer):
-    subscriber = serializers.StringRelatedField(
-        required=False,
-        read_only=True,
-        default=serializers.CurrentUserDefault()
-    )
+# class SubscriptionSerializerForWrite(serializers.ModelSerializer):
+#     subscriber = serializers.StringRelatedField(
+#         required=False,
+#         read_only=True,
+#         default=serializers.CurrentUserDefault()
+#     )
 
-    class Meta:
-        model = Subscription
-        fields = ('subscriber', 'subscribed')
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Subscription.objects.all(),
-        #         fields=['subscriber', 'subscribed']
-        #     )
-        # ]
+#     class Meta:
+#         model = Subscription
+#         fields = ('subscriber', 'subscribed')
+#         # validators = [
+#         #     UniqueTogetherValidator(
+#         #         queryset=Subscription.objects.all(),
+#         #         fields=['subscriber', 'subscribed']
+#         #     )
+#         # ]
 
-    def validate(self, attrs):
-        if attrs['subscribed'] == self.context['request'].user:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя'
-            )
-        return attrs
+#     def validate(self, attrs):
+#         if attrs['subscribed'] == self.context['request'].user:
+#             raise serializers.ValidationError(
+#                 'Нельзя подписаться на самого себя'
+#             )
+#         return attrs
 
-    def to_representation(self, instance):
-        return SubscriptionSerializerForRead(
-            instance=self.context['request'].user
-        ).data
+#     def to_representation(self, instance):
+#         return SubscriptionSerializerForRead(
+#             instance=self.context['request'].user
+#         ).data
