@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 
 from api.constants import LENGTH_FOR_CHARFIELD
 
@@ -14,10 +15,13 @@ class ApiUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('username',)
 
+    username_validator = UnicodeUsernameValidator()
+
     username = models.CharField(
         max_length=LENGTH_FOR_CHARFIELD,
         unique=True,
-        verbose_name='Имя пользователя'
+        verbose_name='Имя пользователя',
+        validators=[username_validator]
     )
     email = models.EmailField(
         max_length=LENGTH_FOR_CHARFIELD,

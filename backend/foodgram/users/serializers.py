@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -55,26 +56,34 @@ class ObtainTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializerForRead(serializers.ModelSerializer):
+    email = serializers.CharField()
+    is_subscribed = serializers.BooleanField(default=True)
+
+    class Meta:
+        model = Subscription
+        fields = (
+            'email',
+            'is_subscribed'
+        )
+
+
+class SubscriptionSerializerForWrite(serializers.ModelSerializer):
     subscriber = serializers.StringRelatedField(
         required=False,
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
-    subscribed = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=ApiUser.objects.all()
-    )
 
     class Meta:
         model = Subscription
         fields = ('subscriber', 'subscribed')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=['subscriber', 'subscribed']
-            )
-        ]
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Subscription.objects.all(),
+        #         fields=['subscriber', 'subscribed']
+        #     )
+        # ]
 
     def validate(self, attrs):
         if attrs['subscribed'] == self.context['request'].user:
@@ -82,3 +91,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                 'Нельзя подписаться на самого себя'
             )
         return attrs
+
+    def to_representation(self, instance):
+        return SubscriptionSerializerForRead(
+            instance=self.context['request'].user
+        ).data

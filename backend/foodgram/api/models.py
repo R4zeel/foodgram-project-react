@@ -33,8 +33,6 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
     )
-    is_favorited = models.BooleanField()
-    is_in_shopping_cart = models.BooleanField()
 
     def __str__(self):
         return self.name
@@ -81,3 +79,15 @@ class RecipeIngredient(models.Model):
 
     def __str__(self):
         return self.ingredient.name
+
+
+class FavoriteRecipe(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_favorited = models.BooleanField(default=False)
+
+
+class InShoppingCartRecipe(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_in_shopping_cart = models.BooleanField(default=False)

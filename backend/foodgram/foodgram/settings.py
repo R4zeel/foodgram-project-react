@@ -95,6 +95,19 @@ REST_FRAMEWORK = {
     ],
 }
 
+# TODO: сериализатор для current_user
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create': 'users.serializers.ApiUserSerializer',
+        'user': 'users.serializers.ApiUserSerializer',
+        'current_user': 'users.serializers.ApiUserSerializer'
+    },
+    'PERMISSIONS': {
+        'user': 'rest_framework.permissions.AllowAny',
+        'user_list': 'rest_framework.permissions.AllowAny'
+    }
+}
+
 SIMPLE_JWT = {
    'ACCESS_TOKEN_LIFETIME': timedelta(days=160),
    'AUTH_HEADER_TYPES': ('Bearer',),

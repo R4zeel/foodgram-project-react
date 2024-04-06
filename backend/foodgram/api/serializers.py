@@ -52,6 +52,7 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
             'cooking_time',
         )
 
+    # TODO: аннотация?
     def get_ingredients_with_amount(self, validated_data):
         recipe = get_object_or_404(Recipe, pk=validated_data.id)
         ingredients = recipe.ingredients.values(
