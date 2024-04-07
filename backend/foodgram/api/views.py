@@ -10,8 +10,8 @@ from .serializers import (RecipeSerializerForRead,
                           IngredientSerializer,
                           TagSerializer,
                           RecipeSerializerForWrite,
-                          FavoriteRecipeSerializerForWrite,
-                          FavoriteRecipeSerializerForRead)
+                          FavoriteSerializerForWrite,
+                          FavoriteCartSerializer)
 from .filters import IngredientSearchFilter
 
 
@@ -51,7 +51,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class FavoriteRecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = FavoriteRecipeSerializerForRead
+    serializer_class = FavoriteCartSerializer
 
     def get_queryset(self):
         return Recipe.objects.filter(favoriterecipe__user=self.request.user)
@@ -63,8 +63,8 @@ class FavoriteRecipeViewSet(viewsets.ModelViewSet):
     
     def get_serializer_class(self):
         if self.request.method not in permissions.SAFE_METHODS:
-            return FavoriteRecipeSerializerForWrite
-        return FavoriteRecipeSerializerForRead
+            return FavoriteSerializerForWrite
+        return FavoriteCartSerializer
 
     @action(
         methods=['POST'],
@@ -76,3 +76,13 @@ class FavoriteRecipeViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @add_to_favorites.mapping.delete
+    def delete_favorite(self, request, pk):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        FavoriteRecipe.objects.filter(
+            user=self.request.user,
+            recipe=pk
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -101,7 +101,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
 
     
 
-class FavoriteRecipeSerializerForRead(serializers.ModelSerializer):
+class FavoriteCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
@@ -109,7 +109,7 @@ class FavoriteRecipeSerializerForRead(serializers.ModelSerializer):
 
 
 
-class FavoriteRecipeSerializerForWrite(serializers.ModelSerializer):
+class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
@@ -117,23 +117,32 @@ class FavoriteRecipeSerializerForWrite(serializers.ModelSerializer):
         )
 
     class Meta:
-        model = FavoriteRecipe
+        model = None
         fields = ('recipe', 'user',)
 
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         attrs['recipe_id'] = self.context['recipe_id']
-        if FavoriteRecipe.objects.filter(
+        recipe = FavoriteRecipe.objects.filter(
             user=self.context['request'].user,
             recipe=self.context['recipe_id']
-        ).exists():
-            raise serializers.ValidationError('Рецепт уже в избранном')
+        )
+        if self.context['request'].method == 'DELETE':
+            if not recipe.exists():
+                raise serializers.ValidationError('Связи не существует')
+            return attrs
+        if recipe.exists():
+            raise serializers.ValidationError('Рецепт уже добавлен')
         return attrs
 
     def to_representation(self, instance):
-        return FavoriteRecipeSerializerForRead(
+        return FavoriteCartSerializer(
             instance=Recipe.objects.get(
                 id=instance.recipe_id
                 )
             ).data
     
+
+class FavoriteSerializerForWrite(FavoriteCartSerializerForWrite):
+    class Meta(FavoriteCartSerializerForWrite.Meta):
+        model = FavoriteRecipe
