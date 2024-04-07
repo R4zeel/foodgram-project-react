@@ -1,3 +1,4 @@
+from django.db.models import Count, Value, Case, When, BooleanField, F
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
@@ -5,9 +6,20 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
 from .serializers import ObtainTokenSerializer
+
+
+class ApiUserViewSet(UserViewSet):
+    queryset = ApiUser.objects.all() # .annotate(
+    #     is_subscribed=Case(
+    #         When(...),
+    #         default=Value(False),
+    #         output_field=BooleanField()
+    #     )
+    # ).order_by('id')
 
 
 class ObtainTokenView(ObtainAuthToken):

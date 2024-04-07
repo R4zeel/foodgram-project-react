@@ -90,7 +90,7 @@ class FavoriteRecipe(models.Model):
         return self.recipe.name
 
 
-class InShoppingCartRecipe(models.Model):
+class ShoppingCartRecipe(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 

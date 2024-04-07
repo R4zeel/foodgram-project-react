@@ -10,7 +10,7 @@ from .models import (Recipe,
                     Tag,
                     RecipeIngredient,
                     FavoriteRecipe,
-                    InShoppingCartRecipe,
+                    ShoppingCartRecipe,
                     User)
 from users.serializers import ApiUserSerializer
 
@@ -43,6 +43,8 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
     )
     tags = TagSerializer(many=True)
     author = ApiUserSerializer(read_only=True)
+    is_favorited = serializers.BooleanField()
+    is_in_shopping_cart = serializers.BooleanField()
 
     class Meta:
         model = Recipe
@@ -55,6 +57,8 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
             'image',
             'text',
             'cooking_time',
+            'is_favorited',
+            'is_in_shopping_cart'
         )
 
     # TODO: аннотация?
@@ -123,7 +127,7 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         attrs['recipe_id'] = self.context['recipe_id']
-        recipe = FavoriteRecipe.objects.filter(
+        recipe = self.Meta.model.objects.filter(
             user=self.context['request'].user,
             recipe=self.context['recipe_id']
         )
@@ -146,3 +150,8 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
 class FavoriteSerializerForWrite(FavoriteCartSerializerForWrite):
     class Meta(FavoriteCartSerializerForWrite.Meta):
         model = FavoriteRecipe
+
+
+class CartSerializerForWrite(FavoriteCartSerializerForWrite):
+    class Meta(FavoriteCartSerializerForWrite.Meta):
+        model = ShoppingCartRecipe
