@@ -12,7 +12,7 @@ from .models import (Recipe,
                     FavoriteRecipe,
                     ShoppingCartRecipe,
                     User)
-from users.serializers import ApiUserSerializer
+from users.serializers import ApiUserSerializerForWrite
 
 
 class Base64ImageField(serializers.ImageField):
@@ -33,7 +33,8 @@ class TagSerializer(serializers.ModelSerializer):
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ('id', 'name', 'measurement_unit',)
+        # fields = ('id', 'name', 'measurement_unit',)
+        fields = '__all__'
 
 
 class RecipeSerializerForRead(serializers.ModelSerializer):
@@ -42,9 +43,9 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
         'get_ingredients_with_amount'
     )
     tags = TagSerializer(many=True)
-    author = ApiUserSerializer(read_only=True)
-    is_favorited = serializers.BooleanField()
-    is_in_shopping_cart = serializers.BooleanField()
+    author = ApiUserSerializerForWrite(read_only=True)
+    is_favorited = serializers.BooleanField(default=False)
+    is_in_shopping_cart = serializers.BooleanField(default=False)
 
     class Meta:
         model = Recipe
@@ -61,7 +62,8 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
             'is_in_shopping_cart'
         )
 
-    # TODO: аннотация?
+    # Пробовал реализовать amount через аннотацию на уровне queryset'а во
+    #  вьюсете - не работает
     def get_ingredients_with_amount(self, validated_data):
         recipe = get_object_or_404(Recipe, pk=validated_data.id)
         ingredients = recipe.ingredients.values(
@@ -143,8 +145,8 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
         return FavoriteCartSerializer(
             instance=Recipe.objects.get(
                 id=instance.recipe_id
-                )
-            ).data
+            )
+        ).data
     
 
 class FavoriteSerializerForWrite(FavoriteCartSerializerForWrite):

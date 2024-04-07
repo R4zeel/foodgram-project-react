@@ -95,12 +95,11 @@ REST_FRAMEWORK = {
     ],
 }
 
-# TODO: сериализатор для current_user
 DJOSER = {
     'SERIALIZERS': {
-        'user_create': 'users.serializers.ApiUserSerializer',
-        'user': 'users.serializers.ApiUserSerializer',
-        'current_user': 'users.serializers.ApiUserSerializer'
+        'user_create': 'users.serializers.ApiUserSerializerForWrite',
+        'user': 'users.serializers.ApiUserSerializerForRead',
+        'current_user': 'users.serializers.ApiUserSerializerForRead'
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny']
