@@ -1,4 +1,4 @@
-from django.db.models import Value, Case, When, BooleanField
+from django.db.models import Value, Case, When, BooleanField, Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, permissions, mixins
 from rest_framework.pagination import LimitOffsetPagination
@@ -10,10 +10,10 @@ from rest_framework.authtoken.models import Token
 from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
+from utils.methods import detail_post_method
 from utils.serializers import (ObtainTokenSerializer,
                               SubscriptionSerializerForWrite,
                               SubscriptionSerializerForRead)
-from utils.methods import detail_post_method
 
 
 class ApiUserViewSet(UserViewSet):
@@ -39,11 +39,18 @@ class ApiUserViewSet(UserViewSet):
     detail=False,
     url_path='subscriptions'
     )
-    def get_subscriptions(self, request):
-        subscriptions = self.get_queryset().filter(
+    def get_subscriptions(self, request, *args, **kwargs):
+        queryset = self.get_queryset().annotate(
+            recipes_count=Count('recipes')
+        ).filter(
             is_subscribed=True
         )
-        serializer = SubscriptionSerializerForRead(subscriptions, many=True)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = SubscriptionSerializerForRead(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = SubscriptionSerializerForRead(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

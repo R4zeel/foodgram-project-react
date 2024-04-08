@@ -1,11 +1,11 @@
 import base64
 
-from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
+from django.core.files.base import ContentFile
 from django.db.models import Value
+from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
 
 from users.models import ApiUser, Subscription
 from api.models import (Recipe,
@@ -265,6 +265,7 @@ class CartSerializerForWrite(FavoriteCartSerializerForWrite):
 class SubscriptionSerializerForRead(serializers.ModelSerializer):
     is_subscribed = serializers.BooleanField()
     recipes = FavoriteCartSerializer(many=True)
+    recipes_count = serializers.IntegerField()
 
     class Meta:
         model = ApiUser
@@ -275,5 +276,6 @@ class SubscriptionSerializerForRead(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'is_subscribed',
-            'recipes'
+            'recipes',
+            'recipes_count'
         )
