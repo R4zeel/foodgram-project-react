@@ -1,15 +1,12 @@
 from django.contrib.auth import authenticate
-from django.db.models import Count, Value, Case, When, BooleanField, F
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from .models import ApiUser, Subscription
 
 
 class ApiUserSerializerForRead(serializers.ModelSerializer):
-    # is_subscribed = serializers.BooleanField()
 
     class Meta:
         model = ApiUser
@@ -19,7 +16,6 @@ class ApiUserSerializerForRead(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'username',
-            # 'is_subscribed'
             )
 
 
@@ -70,32 +66,47 @@ class ObtainTokenSerializer(serializers.Serializer):
             )
         attrs['user'] = user
         return attrs
+    
+
+class SubscriptionSerializerForRead(serializers.ModelSerializer):
+    is_subscribed = serializers.BooleanField()
+
+    class Meta:
+        model = ApiUser
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed'
+        )
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
-    subscriber = serializers.StringRelatedField(
+class SubscriptionSerializerForWrite(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(
         required=False,
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
-    subscribed = serializers.PrimaryKeyRelatedField(
+    subscription = serializers.PrimaryKeyRelatedField(
         read_only=True
     )
 
     class Meta:
         model = Subscription
-        fields = ('subscriber', 'subscribed')
+        fields = ('user', 'subscription')
 
     def validate(self, attrs):
-        attrs['subscriber'] = self.context['request'].user
-        attrs['subscribed_id'] = self.context['subscribed_id']
-        if self.context['request'].user.id == self.context['subscribed_id']:
+        attrs['user'] = self.context['request'].user
+        attrs['subscription_id'] = self.context['subscription_id']
+        if self.context['request'].user.id == self.context['subscription_id']:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
                 )
         user = self.Meta.model.objects.filter(
-            subscriber=self.context['request'].user,
-            subscribed=self.context['subscribed_id']
+            user=self.context['request'].user,
+            subscription=self.context['subscription_id']
         )
         if self.context['request'].method == 'DELETE':
             if not user.exists():
@@ -106,8 +117,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return attrs
     
     def to_representation(self, instance):
-        return ApiUserSerializerForRead(
-            instance=ApiUser.objects.get(
-                id=instance.subscribed_id
-            )
+        return SubscriptionSerializerForRead(
+            instance=instance.subscription
         ).data

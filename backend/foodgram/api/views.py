@@ -69,7 +69,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.method not in permissions.SAFE_METHODS:
             return RecipeSerializerForWrite
         return RecipeSerializerForRead
-    
 
 
 class FavoriteCartViewSet(mixins.CreateModelMixin,

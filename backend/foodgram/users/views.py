@@ -12,25 +12,35 @@ from .models import Subscription, ApiUser
 from .serializers import (ObtainTokenSerializer,
                           ApiUserSerializerForRead,
                           ApiUserSerializerForWrite,
-                          SubscriptionSerializer)
+                          SubscriptionSerializerForWrite,
+                          SubscriptionSerializerForRead)
 
-# TODO: аннотация is_subscribed не работает, для разных методов постоянно
-# приходят разные queryset'ы
+
 class ApiUserViewSet(UserViewSet):
     queryset = ApiUser.objects.all()
 
-    # def get_queryset(self):
-    #     queryset = ApiUser.objects.all().annotate(
-    #         is_subscribed=Case(
-    #             When(
-    #                 subscriber__exact=self.get_instance,
-    #                 then=Value(True)
-    #             ),
-    #             default=Value(False),
-    #             output_field=BooleanField()
-    #         )
-    #     ).order_by('id')
-    #     return queryset
+    def get_queryset(self):
+        queryset = ApiUser.objects.all().annotate(
+            is_subscribed=Case(
+                When(
+                    subscriptions__user__exact=self.request.user.id,
+                    then=Value(True)
+                ),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+        ).order_by('id')
+        return queryset
+    
+    @action(
+    methods=['GET'],
+    detail=False,
+    url_path='subscriptions'
+    )
+    def get_subscriptions(self, request):
+        subscriptions = self.get_queryset().filter(is_subscribed=True)
+        serializer = SubscriptionSerializerForRead(subscriptions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ObtainTokenView(ObtainAuthToken):
@@ -53,18 +63,18 @@ class DestroyTokenView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class SubscribeViewSet(mixins.ListModelMixin,
-                       mixins.CreateModelMixin,
+class SubscribeViewSet(mixins.CreateModelMixin,
                        mixins.DestroyModelMixin,
                        viewsets.GenericViewSet):
     queryset = ApiUser.objects.all()
-    serializer_class = ApiUserSerializerForRead
+    serializer_class = SubscriptionSerializerForRead
+    permission_classes = (permissions.AllowAny,)
 
     def get_queryset(self):
         queryset = ApiUser.objects.all().annotate(
             is_subscribed=Case(
                 When(
-                    subscriber__exact=self.request.user.id,
+                    subscriptions__exact=self.request.user.id,
                     then=Value(True)
                 ),
                 default=Value(False),
@@ -75,19 +85,19 @@ class SubscribeViewSet(mixins.ListModelMixin,
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context.update({'subscribed_id': self.kwargs['pk']})
+        if self.request.method not in permissions.SAFE_METHODS:
+            context.update({'subscription_id': self.kwargs['pk']})
         return context
     
     def get_serializer_class(self):
         if self.request.method not in permissions.SAFE_METHODS:
-            return SubscriptionSerializer
-        # TODO: создать сериализатор на чтение для подписок
-        return ApiUserSerializerForRead
+            return SubscriptionSerializerForWrite
+        return SubscriptionSerializerForRead
     
     @action(
         methods=['POST'],
         detail=True,
-        url_name='subscribe'
+        url_path='subscribe'
     )
     def subscribe(self, request, pk):
         serializer = self.get_serializer(data=request.data)

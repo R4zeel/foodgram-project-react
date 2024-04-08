@@ -60,16 +60,16 @@ class ApiUser(AbstractUser):
 
 
 class Subscription(models.Model):
-    subscriber = models.ForeignKey(
+    user = models.ForeignKey(
         ApiUser,
         on_delete=models.CASCADE,
         related_name='subscriber'
     )
-    subscribed = models.ForeignKey(
+    subscription = models.ForeignKey(
         ApiUser,
         on_delete=models.CASCADE,
-        related_name='subscribed'
+        related_name='subscriptions'
     )
 
     def __str__(self):
-        return self.subscribed.username
+        return self.subscription.username
