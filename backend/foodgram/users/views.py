@@ -1,7 +1,7 @@
 from django.db.models import Value, Case, When, BooleanField
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import viewsets, status, permissions, mixins
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,10 +10,10 @@ from rest_framework.authtoken.models import Token
 from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
-from api.models import Recipe
 from utils.serializers import (ObtainTokenSerializer,
-                          SubscriptionSerializerForWrite,
-                          SubscriptionSerializerForRead)
+                              SubscriptionSerializerForWrite,
+                              SubscriptionSerializerForRead)
+from utils.methods import detail_post_method
 
 
 class ApiUserViewSet(UserViewSet):
@@ -104,17 +104,14 @@ class SubscribeViewSet(mixins.CreateModelMixin,
         url_path='subscribe'
     )
     def subscribe(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return detail_post_method(self, request, pk)
     
     @subscribe.mapping.delete
     def unsubscribe(self, request, pk):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         Subscription.objects.filter(
-            subscriber=self.request.user,
-            subscribed=pk
+            user=self.request.user,
+            subscription=pk
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

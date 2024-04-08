@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-k=y^cj8g8s=y^v&a53zr@p1n&b30crlhqh9=&w9p4y$kz853ns'
@@ -25,6 +24,7 @@ INSTALLED_APPS = [
     'colorfield',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',
+    'utils.apps.UtilsConfig',
 ]
 
 MIDDLEWARE = [

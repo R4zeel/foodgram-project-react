@@ -9,12 +9,12 @@ from django.shortcuts import get_object_or_404
 
 from users.models import ApiUser, Subscription
 from api.models import (Recipe,
-                    Ingredient,
-                    Tag,
-                    RecipeIngredient,
-                    FavoriteRecipe,
-                    ShoppingCartRecipe,
-                    ApiUser)
+                        Ingredient,
+                        Tag,
+                        RecipeIngredient,
+                        FavoriteRecipe,
+                        ShoppingCartRecipe,
+                        ApiUser)
 
 
 class ApiUserSerializerForRead(serializers.ModelSerializer):

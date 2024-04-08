@@ -1,19 +1,19 @@
 from django.db.models import Value, Case, When, BooleanField
-from rest_framework.response import Response
-from rest_framework import viewsets, mixins, filters, status
+from rest_framework import viewsets, mixins, filters
 from rest_framework.decorators import action
 from rest_framework import permissions
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Recipe, Ingredient, Tag, FavoriteRecipe, ShoppingCartRecipe
 from utils.serializers import (RecipeSerializerForRead,
-                          IngredientSerializer,
-                          TagSerializer,
-                          RecipeSerializerForWrite,
-                          FavoriteSerializerForWrite,
-                          FavoriteCartSerializer,
-                          CartSerializerForWrite)
+                              IngredientSerializer,
+                              TagSerializer,
+                              RecipeSerializerForWrite,
+                              FavoriteSerializerForWrite,
+                              FavoriteCartSerializer,
+                              CartSerializerForWrite)
 from .filters import IngredientSearchFilter
+from utils.methods import detail_post_method, detail_delete_method
 
 
 class ListViewSet(mixins.ListModelMixin,
@@ -84,6 +84,8 @@ class FavoriteCartViewSet(mixins.CreateModelMixin,
 
 
 class FavoriteRecipeViewSet(FavoriteCartViewSet):
+    model_name = FavoriteRecipe
+
     def get_queryset(self):
         return Recipe.objects.filter(favoriterecipe__user=self.request.user)
     
@@ -98,23 +100,16 @@ class FavoriteRecipeViewSet(FavoriteCartViewSet):
         url_path='favorite'
     )
     def add_to_favorites(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return detail_post_method(self, request, pk)
     
     @add_to_favorites.mapping.delete
     def delete_favorite(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        FavoriteRecipe.objects.filter(
-            user=self.request.user,
-            recipe=pk
-        ).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return detail_delete_method(self, request, pk)
     
 
 class ShoppingCartRecipeViewSet(FavoriteCartViewSet):
+    model_name = ShoppingCartRecipe
+
     def get_queryset(self):
         return Recipe.objects.filter(shoppingcartrecipe__user=self.request.user)
     
@@ -129,17 +124,8 @@ class ShoppingCartRecipeViewSet(FavoriteCartViewSet):
         url_path='shopping_cart'
     )
     def add_to_cart(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return detail_post_method(self, request, pk)
     
     @add_to_cart.mapping.delete
     def delete_favorite(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        ShoppingCartRecipe.objects.filter(
-            user=self.request.user,
-            recipe=pk
-        ).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return detail_delete_method(self, request, pk)
