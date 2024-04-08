@@ -1,5 +1,6 @@
-from django.db.models import Count, Value, Case, When, BooleanField, F
-from django.shortcuts import get_object_or_404
+from django.db.models import Value, Case, When, BooleanField
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import viewsets, status, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.views import APIView
@@ -9,15 +10,16 @@ from rest_framework.authtoken.models import Token
 from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
-from .serializers import (ObtainTokenSerializer,
-                          ApiUserSerializerForRead,
-                          ApiUserSerializerForWrite,
+from api.models import Recipe
+from utils.serializers import (ObtainTokenSerializer,
                           SubscriptionSerializerForWrite,
                           SubscriptionSerializerForRead)
 
 
 class ApiUserViewSet(UserViewSet):
     queryset = ApiUser.objects.all()
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
 
     def get_queryset(self):
         queryset = ApiUser.objects.all().annotate(
@@ -38,7 +40,9 @@ class ApiUserViewSet(UserViewSet):
     url_path='subscriptions'
     )
     def get_subscriptions(self, request):
-        subscriptions = self.get_queryset().filter(is_subscribed=True)
+        subscriptions = self.get_queryset().filter(
+            is_subscribed=True
+        )
         serializer = SubscriptionSerializerForRead(subscriptions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -74,7 +78,7 @@ class SubscribeViewSet(mixins.CreateModelMixin,
         queryset = ApiUser.objects.all().annotate(
             is_subscribed=Case(
                 When(
-                    subscriptions__exact=self.request.user.id,
+                    subscriptions__user__exact=self.request.user.id,
                     then=Value(True)
                 ),
                 default=Value(False),

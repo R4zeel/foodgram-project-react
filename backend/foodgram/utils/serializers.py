@@ -1,19 +1,125 @@
 import base64
 
+from django.contrib.auth import authenticate
+from django.db.models import Value
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from rest_framework.validators import UniqueTogetherValidator
 
-from .models import (Recipe, 
+from users.models import ApiUser, Subscription
+from api.models import (Recipe,
                     Ingredient,
                     Tag,
                     RecipeIngredient,
                     FavoriteRecipe,
                     ShoppingCartRecipe,
-                    User)
-from users.serializers import ApiUserSerializerForWrite
+                    ApiUser)
 
+
+class ApiUserSerializerForRead(serializers.ModelSerializer):
+
+    class Meta:
+        model = ApiUser
+        fields = (
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'username',
+            )
+
+
+class ApiUserSerializerForWrite(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = ApiUser
+        fields = (
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'username',
+            'password',
+        )
+
+    def validate(self, attrs):
+        password = attrs.get('password')
+        attrs['password'] = make_password(password)
+        return attrs
+
+
+class SetPasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+
+class ObtainTokenSerializer(serializers.Serializer):
+    email = serializers.CharField(max_length=128, required=True)
+    password = serializers.CharField(max_length=128, required=True)
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+        if not email and not password:
+            raise serializers.ValidationError(
+                'Все поля обязательны к заполнению'
+            )
+        user = authenticate(
+            request=self.context.get('request'),
+            email=email,
+            password=password
+        )
+        if not user:
+            raise serializers.ValidationError(
+                'Введены некорректные данные.'
+            )
+        attrs['user'] = user
+        return attrs
+    
+
+class SubscriptionSerializerForWrite(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(
+        required=False,
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+    subscription = serializers.PrimaryKeyRelatedField(
+        read_only=True
+    )
+
+    class Meta:
+        model = Subscription
+        fields = ('user', 'subscription')
+
+    def validate(self, attrs):
+        attrs['user'] = self.context['request'].user
+        attrs['subscription_id'] = self.context['subscription_id']
+        if self.context['request'].user.id == self.context['subscription_id']:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя'
+                )
+        user = self.Meta.model.objects.filter(
+            user=self.context['request'].user,
+            subscription=self.context['subscription_id']
+        )
+        if self.context['request'].method == 'DELETE':
+            if not user.exists():
+                raise serializers.ValidationError('Связи не существует')
+            return attrs
+        if user.exists():
+            raise serializers.ValidationError('Связь уже существует')
+        return attrs
+    
+    def to_representation(self, instance):
+        return SubscriptionSerializerForRead(
+            instance=ApiUser.objects.annotate(
+                is_subscribed=Value(True)
+            ).get(
+                id=instance.subscription_id
+            )
+        ).data
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -34,7 +140,6 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit',)
-        # fields = '__all__'
 
 
 class RecipeSerializerForRead(serializers.ModelSerializer):
@@ -106,13 +211,11 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
         return RecipeSerializerForRead(instance=instance).data
 
     
-
 class FavoriteCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-
 
 
 class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
@@ -157,3 +260,20 @@ class FavoriteSerializerForWrite(FavoriteCartSerializerForWrite):
 class CartSerializerForWrite(FavoriteCartSerializerForWrite):
     class Meta(FavoriteCartSerializerForWrite.Meta):
         model = ShoppingCartRecipe
+
+
+class SubscriptionSerializerForRead(serializers.ModelSerializer):
+    is_subscribed = serializers.BooleanField()
+    recipes = FavoriteCartSerializer(many=True)
+
+    class Meta:
+        model = ApiUser
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes'
+        )

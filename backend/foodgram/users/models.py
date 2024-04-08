@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
-from api.constants import LENGTH_FOR_CHARFIELD
+from utils.constants import LENGTH_FOR_CHARFIELD, LENGTH_FOR_EMAIL
 
 
 class ApiUser(AbstractUser):
@@ -24,7 +24,7 @@ class ApiUser(AbstractUser):
         validators=[username_validator]
     )
     email = models.EmailField(
-        max_length=LENGTH_FOR_CHARFIELD,
+        max_length=LENGTH_FOR_EMAIL,
         unique=True,
         verbose_name='Почта'
     )
@@ -45,6 +45,10 @@ class ApiUser(AbstractUser):
         verbose_name='Роль'
     )
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
     @property
     def is_admin(self):
         return (self.role == 'admin'
@@ -63,13 +67,19 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         ApiUser,
         on_delete=models.CASCADE,
-        related_name='subscriber'
+        related_name='subscriber',
+        verbose_name='Подписчик'
     )
     subscription = models.ForeignKey(
         ApiUser,
         on_delete=models.CASCADE,
-        related_name='subscriptions'
+        related_name='subscriptions',
+        verbose_name='Подписка'
     )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
 
     def __str__(self):
         return self.subscription.username

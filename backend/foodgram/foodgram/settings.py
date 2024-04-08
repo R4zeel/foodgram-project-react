@@ -22,8 +22,9 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'djoser',
-    'users.apps.UsersConfig',
+    'colorfield',
     'api.apps.ApiConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -97,9 +98,9 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'user_create': 'users.serializers.ApiUserSerializerForWrite',
-        'user': 'users.serializers.ApiUserSerializerForRead',
-        'current_user': 'users.serializers.ApiUserSerializerForRead'
+        'user_create': 'utils.serializers.ApiUserSerializerForWrite',
+        'user': 'utils.serializers.ApiUserSerializerForRead',
+        'current_user': 'utils.serializers.ApiUserSerializerForRead'
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny']

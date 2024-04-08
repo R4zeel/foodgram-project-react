@@ -1,4 +1,4 @@
-from django.db.models import Value, Case, When, BooleanField, Prefetch, IntegerField, F, Count
+from django.db.models import Value, Case, When, BooleanField
 from rest_framework.response import Response
 from rest_framework import viewsets, mixins, filters, status
 from rest_framework.decorators import action
@@ -6,7 +6,7 @@ from rest_framework import permissions
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Recipe, Ingredient, Tag, FavoriteRecipe, ShoppingCartRecipe
-from .serializers import (RecipeSerializerForRead,
+from utils.serializers import (RecipeSerializerForRead,
                           IngredientSerializer,
                           TagSerializer,
                           RecipeSerializerForWrite,

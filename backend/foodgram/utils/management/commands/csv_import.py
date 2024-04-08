@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.apps import apps
 from django.db.utils import IntegrityError
 
-from api.constants import APP_LABEL
+from utils.constants import API_APP_LABEL
 
 
 class FileOpenException(Exception):
@@ -14,13 +14,14 @@ class FileOpenException(Exception):
 
 
 class Command(BaseCommand):
+    """Команда для импорта данных из CSV-файла."""
     def handle(self, **options):
         files = [
             'ingredient.csv',
         ]
         for file in files:
             model_name = Path(file).stem
-            model_class = apps.get_model(APP_LABEL, model_name)
+            model_class = apps.get_model(API_APP_LABEL, model_name)
             try:
                 with open(f'static/data/{file}', newline='') as f:
                     dataframe = csv.DictReader(f)
