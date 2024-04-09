@@ -14,14 +14,11 @@ class IngredientSearchFilter(filters.FilterSet):
 
 class RecipeSearchFilter(filters.FilterSet):
     author = filters.NumberFilter(field_name='author', lookup_expr='exact')
-    tags = filters.CharFilter(field_name='tags', method='get_tags')
+    tags_slug = filters.CharFilter(field_name='tags__slug', lookup_expr='iexact')
+    is_favorited = filters.BooleanFilter(field_name='favoriterecipe')
+    is_in_shopping_cart = filters.BooleanFilter(field_name='shoppingcartrecipe')
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags')
+        fields = ('author', 'tags__slug', 'favoriterecipe', 'shoppingcartrecipe')
 
-    def get_tags(self, queryset, name, value):
-        name = f'{name}__slug'
-        return queryset.filter(
-            tags__slug=value
-        )

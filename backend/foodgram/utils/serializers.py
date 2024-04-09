@@ -2,7 +2,7 @@ import base64
 
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
-from django.db.models import Value
+from django.db.models import Value, Count, Case, When
 from django.db.utils import IntegrityError
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
@@ -99,29 +99,32 @@ class SubscriptionSerializerForWrite(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         attrs['subscription_id'] = self.context['subscription_id']
-        if self.context['request'].user.id == self.context['subscription_id']:
+        subscription_user = get_object_or_404(ApiUser, id=self.context['subscription_id'])
+        if self.context['request'].user == subscription_user:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
                 )
-        user = self.Meta.model.objects.filter(
+        subscription = self.Meta.model.objects.filter(
             user=self.context['request'].user,
-            subscription=self.context['subscription_id']
+            subscription=subscription_user
         )
         if self.context['request'].method == 'DELETE':
-            if not user.exists():
+            if not subscription.exists():
                 raise serializers.ValidationError('Связи не существует')
             return attrs
-        if user.exists():
+        if subscription.exists():
             raise serializers.ValidationError('Связь уже существует')
         return attrs
     
     def to_representation(self, instance):
         return SubscriptionSerializerForRead(
             instance=ApiUser.objects.annotate(
-                is_subscribed=Value(True)
+                is_subscribed=Value(True),
+                recipes_count=Count('recipes')
             ).get(
                 id=instance.subscription_id
-            )
+            ),
+            context=self.context['request'].query_params
         ).data
 
 class Base64ImageField(serializers.ImageField):
@@ -285,17 +288,24 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         attrs['recipe_id'] = self.context['recipe_id']
-        recipe = self.Meta.model.objects.filter(
+        recipe = get_object_or_404(Recipe, id=self.context['recipe_id'])
+        added_recipe = self.Meta.model.objects.filter(
             user=self.context['request'].user,
-            recipe=self.context['recipe_id']
+            recipe=recipe
         )
         if self.context['request'].method == 'DELETE':
-            if not recipe.exists():
+            if not added_recipe.exists():
                 raise serializers.ValidationError('Связи не существует')
             return attrs
-        if recipe.exists():
+        if added_recipe.exists():
             raise serializers.ValidationError('Рецепт уже добавлен')
         return attrs
+    
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError('Рецепта не существует')
 
     def to_representation(self, instance):
         return FavoriteCartSerializer(
@@ -317,7 +327,7 @@ class CartSerializerForWrite(FavoriteCartSerializerForWrite):
 
 class SubscriptionSerializerForRead(serializers.ModelSerializer):
     is_subscribed = serializers.BooleanField()
-    recipes = FavoriteCartSerializer(many=True)
+    recipes = serializers.SerializerMethodField('get_recipes')
     recipes_count = serializers.IntegerField()
 
     class Meta:
@@ -332,3 +342,12 @@ class SubscriptionSerializerForRead(serializers.ModelSerializer):
             'recipes',
             'recipes_count'
         )
+
+    def get_recipes(self, instance):
+        user = ApiUser.objects.get(id=instance.pk)
+        if self.context:
+            limit = int(self.context['recipes_limit'])
+            queryset = user.recipes.all()[:limit]
+        else:
+            queryset = user.recipes.all()
+        return FavoriteCartSerializer(queryset, many=True).data

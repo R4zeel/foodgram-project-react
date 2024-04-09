@@ -11,6 +11,7 @@ from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
 from utils.methods import detail_post_method
+from utils.permissions import IsAuthenticatedAuthorOrReadOnly
 from utils.serializers import (ObtainTokenSerializer,
                               SubscriptionSerializerForWrite,
                               SubscriptionSerializerForRead)
@@ -90,7 +91,9 @@ class SubscribeViewSet(mixins.CreateModelMixin,
                        viewsets.GenericViewSet):
     queryset = ApiUser.objects.all()
     serializer_class = SubscriptionSerializerForRead
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAuthenticatedAuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         queryset = ApiUser.objects.all().annotate(
