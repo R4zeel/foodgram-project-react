@@ -1,8 +1,12 @@
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from colorfield.fields import ColorField
 
-from utils.constants import LENGTH_FOR_CHARFIELD, LENGTH_FOR_RECIPE_NAME, LENGTH_FOR_TEXTFIELD
+from utils.constants import (LENGTH_FOR_CHARFIELD,
+                             LENGTH_FOR_RECIPE_NAME,
+                             LENGTH_FOR_TEXTFIELD,
+                             MIN_VALIDATOR_VALUE,
+                             MIN_VALIDATOR_ERROR_MESSAGE)
 from users.models import ApiUser
 
 
@@ -33,6 +37,12 @@ class Recipe(models.Model):
         )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
+        validators=(
+            MinValueValidator(
+                MIN_VALIDATOR_VALUE,
+                MIN_VALIDATOR_ERROR_MESSAGE
+            ),
+        )
     )
 
     class Meta:
@@ -82,10 +92,25 @@ class Ingredient(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.PositiveSmallIntegerField(verbose_name='Количество',)
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Количество',
+        # не работает?
+        validators=(
+            MinValueValidator(
+                MIN_VALIDATOR_VALUE,
+                MIN_VALIDATOR_ERROR_MESSAGE
+            ),
+        )
+    )
 
     class Meta:
         default_related_name = 'recipe_ingredients'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique ingredient'
+            )
+        ]
 
     def __str__(self):
         return self.ingredient.name

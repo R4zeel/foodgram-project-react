@@ -35,6 +35,17 @@ class ApiUserViewSet(UserViewSet):
         return queryset
     
     @action(
+        methods=['GET'],
+        detail=False,
+        url_path='me',
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def get_me(self, request):
+        instance = self.get_queryset().get(id=self.request.user.id)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+    
+    @action(
     methods=['GET'],
     detail=False,
     url_path='subscriptions'

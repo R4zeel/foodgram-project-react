@@ -3,6 +3,7 @@ import base64
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
 from django.db.models import Value
+from django.db.utils import IntegrityError
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
@@ -18,6 +19,7 @@ from api.models import (Recipe,
 
 
 class ApiUserSerializerForRead(serializers.ModelSerializer):
+    is_subscribed = serializers.BooleanField()
 
     class Meta:
         model = ApiUser
@@ -27,6 +29,7 @@ class ApiUserSerializerForRead(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'username',
+            'is_subscribed'
             )
 
 
@@ -197,14 +200,64 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             'cooking_time'
         )
 
+    def validate(self, attrs):
+        try:
+            attrs['ingredients'] = self.initial_data['ingredients']
+            if len(attrs['tags']) != len(set(attrs['tags'])):
+                raise serializers.ValidationError(
+                'Тэги не должны повторяться'
+                )
+        except KeyError:
+            raise serializers.ValidationError(
+                'Запрос должен содержать все необходимые поля'
+            )
+        if not attrs['ingredients']:
+            raise serializers.ValidationError(
+                'Поле ингредиентов не может быть пустым'
+            )
+        for item in attrs['ingredients']:
+            if not Ingredient.objects.filter(id=item['id']).exists():
+                raise serializers.ValidationError('Ингредиента не существует')
+            if item['amount'] < 1:
+                raise serializers.ValidationError(
+                    'Количество не может быть меньше одного'
+                    )
+        return attrs
+
     def create(self, validated_data):
-        ingredients = self.initial_data.pop('ingredients')
+        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         for ingredient in ingredients:
             ingredient['ingredient_id'] = ingredient.pop('id')
-            RecipeIngredient.objects.create(recipe=recipe, **ingredient)
+            try:
+                RecipeIngredient.objects.create(recipe=recipe, **ingredient)
+            except IntegrityError:
+                raise serializers.ValidationError(
+                    'В рецепте не может быть повторяющихся ингредиентов'
+                )
+        return recipe
+    
+    def update(self, instance, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        Recipe.objects.filter(id=instance.pk).update(**validated_data)
+        recipe = get_object_or_404(Recipe, id=instance.pk)
+        recipe.tags.set(tags)
+        for ingredient in ingredients:
+            recipe_ingredient = RecipeIngredient.objects.get(
+                recipe=recipe, 
+                ingredient=ingredient['id']
+            )
+            try:
+                recipe_ingredient.id = ingredient['id']
+                recipe_ingredient.amount = ingredient['amount']
+                recipe_ingredient.save()
+            except IntegrityError:
+                raise serializers.ValidationError(
+                    'В рецепте не может быть повторяющихся ингредиентов'
+                )
         return recipe
 
     def to_representation(self, instance):

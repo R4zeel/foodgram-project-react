@@ -1,11 +1,13 @@
 from django.db.models import Value, Case, When, BooleanField
 from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Recipe, Ingredient, Tag, FavoriteRecipe, ShoppingCartRecipe
-from .filters import IngredientSearchFilter
+from utils.filters import IngredientSearchFilter, RecipeSearchFilter
 from utils.methods import detail_post_method, detail_delete_method
+from utils.permissions import IsAuthenticatedAuthorOrReadOnly
 from utils.serializers import (RecipeSerializerForRead,
                               IngredientSerializer,
                               TagSerializer,
@@ -38,7 +40,11 @@ class TagViewSet(ListViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializerForRead
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAuthenticatedAuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeSearchFilter
+    pagination_class = LimitOffsetPagination
+    search_fields = ('author', 'tags')
 
     def get_queryset(self):
         queryset = Recipe.objects.all().annotate(
