@@ -16,25 +16,25 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор',
         related_name='recipes'
-        )
+    )
     name = models.CharField(
         verbose_name='Название',
         max_length=LENGTH_FOR_RECIPE_NAME
-        )
+    )
     image = models.ImageField()
     text = models.TextField(
         verbose_name='Описание',
         max_length=LENGTH_FOR_TEXTFIELD
-        )
+    )
     ingredients = models.ManyToManyField(
         'Ingredient',
         through='RecipeIngredient',
         verbose_name='Ингредиенты'
-        )
+    )
     tags = models.ManyToManyField(
         'Tag',
-        verbose_name='Тэги'
-        )
+        verbose_name='Тэги',
+    )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
         validators=(
@@ -75,12 +75,12 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Название',
         max_length=LENGTH_FOR_CHARFIELD
-        )
+    )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
         max_length=LENGTH_FOR_CHARFIELD
-        )
-    
+    )
+
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'

@@ -1,7 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import ObtainTokenView, DestroyTokenView, SubscribeViewSet, ApiUserViewSet
+from .views import (ObtainTokenView,
+                    DestroyTokenView,
+                    SubscribeViewSet,
+                    ApiUserViewSet)
 
 users_router = DefaultRouter()
 users_router.register('users', ApiUserViewSet, basename='users')

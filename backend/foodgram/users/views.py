@@ -11,10 +11,10 @@ from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
 from utils.methods import detail_post_method
-from utils.permissions import IsAuthenticatedAuthorOrReadOnly
+from utils.permissions import IsAuthenticatedOrReadOnly
 from utils.serializers import (ObtainTokenSerializer,
-                              SubscriptionSerializerForWrite,
-                              SubscriptionSerializerForRead)
+                               SubscriptionSerializerForWrite,
+                               SubscriptionSerializerForRead)
 
 
 class ApiUserViewSet(UserViewSet):
@@ -34,7 +34,7 @@ class ApiUserViewSet(UserViewSet):
             )
         ).order_by('id')
         return queryset
-    
+
     @action(
         methods=['GET'],
         detail=False,
@@ -45,11 +45,11 @@ class ApiUserViewSet(UserViewSet):
         instance = self.get_queryset().get(id=self.request.user.id)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-    
+
     @action(
-    methods=['GET'],
-    detail=False,
-    url_path='subscriptions'
+        methods=['GET'],
+        detail=False,
+        url_path='subscriptions'
     )
     def get_subscriptions(self, request, *args, **kwargs):
         queryset = self.get_queryset().annotate(
@@ -91,7 +91,7 @@ class SubscribeViewSet(mixins.CreateModelMixin,
                        viewsets.GenericViewSet):
     queryset = ApiUser.objects.all()
     serializer_class = SubscriptionSerializerForRead
-    permission_classes = (IsAuthenticatedAuthorOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
 
@@ -113,12 +113,12 @@ class SubscribeViewSet(mixins.CreateModelMixin,
         if self.request.method not in permissions.SAFE_METHODS:
             context.update({'subscription_id': self.kwargs['pk']})
         return context
-    
+
     def get_serializer_class(self):
         if self.request.method not in permissions.SAFE_METHODS:
             return SubscriptionSerializerForWrite
         return SubscriptionSerializerForRead
-    
+
     @action(
         methods=['POST'],
         detail=True,
@@ -126,7 +126,7 @@ class SubscribeViewSet(mixins.CreateModelMixin,
     )
     def subscribe(self, request, pk):
         return detail_post_method(self, request, pk)
-    
+
     @subscribe.mapping.delete
     def unsubscribe(self, request, pk):
         serializer = self.get_serializer(data=request.data)

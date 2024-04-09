@@ -4,11 +4,11 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-k=y^cj8g8s=y^v&a53zr@p1n&b30crlhqh9=&w9p4y$kz853ns'
+SECRET_KEY = os.getenv('SECRET_KEY', 'default-key')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(' ')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -109,8 +109,8 @@ DJOSER = {
 }
 
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=160),
-   'AUTH_HEADER_TYPES': ('Bearer',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=160),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 LANGUAGE_CODE = 'en-us'

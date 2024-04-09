@@ -1,7 +1,6 @@
 from django_filters import rest_framework as filters
 
-from api.models import Ingredient, Recipe, Tag
-from users.models import ApiUser
+from api.models import Ingredient, Recipe
 
 
 class IngredientSearchFilter(filters.FilterSet):
@@ -14,11 +13,21 @@ class IngredientSearchFilter(filters.FilterSet):
 
 class RecipeSearchFilter(filters.FilterSet):
     author = filters.NumberFilter(field_name='author', lookup_expr='exact')
-    tags_slug = filters.CharFilter(field_name='tags__slug', lookup_expr='iexact')
-    is_favorited = filters.BooleanFilter(field_name='favoriterecipe')
-    is_in_shopping_cart = filters.BooleanFilter(field_name='shoppingcartrecipe')
+    is_favorited = filters.BooleanFilter(method='get_bool_for_favorite')
+    is_in_shopping_cart = filters.BooleanFilter(method='get_bool_for_cart')
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags__slug', 'favoriterecipe', 'shoppingcartrecipe')
+        fields = ('author', 'tags', 'favoriterecipe', 'shoppingcartrecipe')
 
+    def get_bool_for_cart(self, queryset, name, value):
+        user = self.request.user
+        if value and user.is_authenticated:
+            queryset = queryset.filter(shoppingcartrecipe__user=user)
+        return queryset
+
+    def get_bool_for_favorite(self, queryset, name, value):
+        user = self.request.user
+        if value and user.is_authenticated:
+            queryset = queryset.filter(favoriterecipe__user=user)
+        return queryset

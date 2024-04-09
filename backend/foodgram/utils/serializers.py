@@ -2,7 +2,7 @@ import base64
 
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
-from django.db.models import Value, Count, Case, When
+from django.db.models import Value, Count
 from django.db.utils import IntegrityError
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
@@ -30,7 +30,7 @@ class ApiUserSerializerForRead(serializers.ModelSerializer):
             'last_name',
             'username',
             'is_subscribed'
-            )
+        )
 
 
 class ApiUserSerializerForWrite(serializers.ModelSerializer):
@@ -80,7 +80,7 @@ class ObtainTokenSerializer(serializers.Serializer):
             )
         attrs['user'] = user
         return attrs
-    
+
 
 class SubscriptionSerializerForWrite(serializers.ModelSerializer):
     user = serializers.StringRelatedField(
@@ -99,11 +99,14 @@ class SubscriptionSerializerForWrite(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
         attrs['subscription_id'] = self.context['subscription_id']
-        subscription_user = get_object_or_404(ApiUser, id=self.context['subscription_id'])
+        subscription_user = get_object_or_404(
+            ApiUser,
+            id=self.context['subscription_id']
+        )
         if self.context['request'].user == subscription_user:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
-                )
+            )
         subscription = self.Meta.model.objects.filter(
             user=self.context['request'].user,
             subscription=subscription_user
@@ -115,7 +118,7 @@ class SubscriptionSerializerForWrite(serializers.ModelSerializer):
         if subscription.exists():
             raise serializers.ValidationError('Связь уже существует')
         return attrs
-    
+
     def to_representation(self, instance):
         return SubscriptionSerializerForRead(
             instance=ApiUser.objects.annotate(
@@ -126,6 +129,7 @@ class SubscriptionSerializerForWrite(serializers.ModelSerializer):
             ),
             context=self.context['request'].query_params
         ).data
+
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -173,8 +177,6 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
             'is_in_shopping_cart'
         )
 
-    # Пробовал реализовать amount через аннотацию на уровне queryset'а во
-    #  вьюсете - не работает
     def get_ingredients_with_amount(self, validated_data):
         recipe = get_object_or_404(Recipe, pk=validated_data.id)
         ingredients = recipe.ingredients.values(
@@ -208,7 +210,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             attrs['ingredients'] = self.initial_data['ingredients']
             if len(attrs['tags']) != len(set(attrs['tags'])):
                 raise serializers.ValidationError(
-                'Тэги не должны повторяться'
+                    'Тэги не должны повторяться'
                 )
         except KeyError:
             raise serializers.ValidationError(
@@ -224,7 +226,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             if item['amount'] < 1:
                 raise serializers.ValidationError(
                     'Количество не может быть меньше одного'
-                    )
+                )
         return attrs
 
     def create(self, validated_data):
@@ -241,7 +243,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
                     'В рецепте не может быть повторяющихся ингредиентов'
                 )
         return recipe
-    
+
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -250,7 +252,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
         recipe.tags.set(tags)
         for ingredient in ingredients:
             recipe_ingredient = RecipeIngredient.objects.get(
-                recipe=recipe, 
+                recipe=recipe,
                 ingredient=ingredient['id']
             )
             try:
@@ -266,7 +268,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
     def to_representation(self, instance):
         return RecipeSerializerForRead(instance=instance).data
 
-    
+
 class FavoriteCartSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -279,7 +281,7 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault()
-        )
+    )
 
     class Meta:
         model = None
@@ -300,7 +302,7 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
         if added_recipe.exists():
             raise serializers.ValidationError('Рецепт уже добавлен')
         return attrs
-    
+
     def create(self, validated_data):
         try:
             return super().create(validated_data)
@@ -313,7 +315,7 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
                 id=instance.recipe_id
             )
         ).data
-    
+
 
 class FavoriteSerializerForWrite(FavoriteCartSerializerForWrite):
     class Meta(FavoriteCartSerializerForWrite.Meta):

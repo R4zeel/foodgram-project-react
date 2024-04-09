@@ -1,20 +1,29 @@
-from django.db.models import Value, Case, When, BooleanField
+from io import BytesIO
+import json
+
+from django.db.models import Value, Case, When, BooleanField, F
+from django.db.models.functions import Concat
+from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Recipe, Ingredient, Tag, FavoriteRecipe, ShoppingCartRecipe
 from utils.filters import IngredientSearchFilter, RecipeSearchFilter
 from utils.methods import detail_post_method, detail_delete_method
-from utils.permissions import IsAuthenticatedAuthorOrReadOnly
+from utils.permissions import IsAuthenticatedOrReadOnly, IsAuthor
+from .models import (Recipe,
+                     Ingredient,
+                     Tag,
+                     FavoriteRecipe,
+                     ShoppingCartRecipe,)
 from utils.serializers import (RecipeSerializerForRead,
-                              IngredientSerializer,
-                              TagSerializer,
-                              RecipeSerializerForWrite,
-                              FavoriteSerializerForWrite,
-                              FavoriteCartSerializer,
-                              CartSerializerForWrite)
+                               IngredientSerializer,
+                               TagSerializer,
+                               RecipeSerializerForWrite,
+                               FavoriteSerializerForWrite,
+                               FavoriteCartSerializer,
+                               CartSerializerForWrite)
 
 
 class ListViewSet(mixins.ListModelMixin,
@@ -40,11 +49,10 @@ class TagViewSet(ListViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializerForRead
-    permission_classes = (IsAuthenticatedAuthorOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeSearchFilter
     pagination_class = LimitOffsetPagination
-    search_fields = ('author', 'tags')
 
     def get_queryset(self):
         queryset = Recipe.objects.all().annotate(
@@ -75,6 +83,38 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeSerializerForWrite
         return RecipeSerializerForRead
 
+    def get_permissions(self):
+        if self.request.method == 'PATCH' or self.request.method == 'DELETE':
+            return [IsAuthor()]
+        return [permission() for permission in self.permission_classes]
+
+    @action(
+        methods=['GET'],
+        detail=False,
+        url_path='download_shopping_cart'
+    )
+    def download_shopping_cart(self, request):
+        queryset = Recipe.objects.filter(
+            shoppingcartrecipe__user=self.request.user,
+            id=F('shoppingcartrecipe__recipe')
+        ).values(
+            'name'
+        ).annotate(
+            amount=F('recipe_ingredients__amount')
+        ).annotate(
+            ing_name=Concat(
+                F('ingredients__name'),
+                Value(' ,'),
+                F('ingredients__measurement_unit')
+            )
+        )
+        output = {item['ing_name']: 0 for item in queryset}
+        for item in queryset:
+            output[f'{item['ing_name']}'] += item['amount']
+        bytes_data = json.dumps(output).encode('utf-8')
+        buffer = BytesIO(bytes_data)
+        return FileResponse(buffer, filename='test.txt', as_attachment=True)
+
 
 class FavoriteCartViewSet(mixins.CreateModelMixin,
                           mixins.DestroyModelMixin,
@@ -93,7 +133,7 @@ class FavoriteRecipeViewSet(FavoriteCartViewSet):
 
     def get_queryset(self):
         return Recipe.objects.filter(favoriterecipe__user=self.request.user)
-    
+
     def get_serializer_class(self):
         if self.request.method not in permissions.SAFE_METHODS:
             return FavoriteSerializerForWrite
@@ -106,18 +146,20 @@ class FavoriteRecipeViewSet(FavoriteCartViewSet):
     )
     def add_to_favorites(self, request, pk):
         return detail_post_method(self, request, pk)
-    
+
     @add_to_favorites.mapping.delete
     def delete_favorite(self, request, pk):
         return detail_delete_method(self, request, pk)
-    
+
 
 class ShoppingCartRecipeViewSet(FavoriteCartViewSet):
     model_name = ShoppingCartRecipe
 
     def get_queryset(self):
-        return Recipe.objects.filter(shoppingcartrecipe__user=self.request.user)
-    
+        return Recipe.objects.filter(
+            shoppingcartrecipe__user=self.request.user
+        )
+
     def get_serializer_class(self):
         if self.request.method not in permissions.SAFE_METHODS:
             return CartSerializerForWrite
@@ -130,7 +172,7 @@ class ShoppingCartRecipeViewSet(FavoriteCartViewSet):
     )
     def add_to_cart(self, request, pk):
         return detail_post_method(self, request, pk)
-    
+
     @add_to_cart.mapping.delete
     def delete_favorite(self, request, pk):
         return detail_delete_method(self, request, pk)
