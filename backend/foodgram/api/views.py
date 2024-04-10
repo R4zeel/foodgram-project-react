@@ -108,9 +108,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
         )
         output_string = ''
-        output_string = ''.join(
-            [f'{item['ing_name']} - {item['amount']} \n' for item in queryset]
-        )
+        for item in queryset:
+            output_string += item['ing_name'] + ' - ' + item['amount'] + '\n'
+        # Такая конструкция не проходит pep8 при отправке на ревью
+        # output_string = ''.join(
+        #     [f'{item['ing_name']} - {item['amount']} \n'
+        #      for item in queryset]
+        # )
         buffer = BytesIO(str.encode(output_string))
         return FileResponse(buffer, filename='test.txt', as_attachment=True)
 

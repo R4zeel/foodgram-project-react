@@ -1,3 +1,8 @@
+"""
+Из-за взаимных импортов между сериализаторами приложений Users и Api
+было принято решение совместить их в один файл, чтобы избежать
+циркулярных зависимостей.
+"""
 import base64
 
 from django.shortcuts import get_object_or_404
@@ -8,7 +13,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
-from users.models import ApiUser, Subscription
+from users.models import Subscription
 from api.models import (Recipe,
                         Ingredient,
                         Tag,
