@@ -111,7 +111,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         output = {item['ing_name']: 0 for item in queryset}
         for item in queryset:
             output[f'{item['ing_name']}'] += item['amount']
-        bytes_data = json.dumps(output).encode('utf-8')
+        bytes_data = json.dumps(output, ensure_ascii=False).encode('utf-8')
         buffer = BytesIO(bytes_data)
         return FileResponse(buffer, filename='test.txt', as_attachment=True)
 
