@@ -3,6 +3,7 @@ version: '3.3'
 volumes:
   pg_data:
   media:
+  static:
 
 services:
   db:
@@ -17,13 +18,13 @@ services:
     env_file: .env
     volumes:
       - media:/app/media
-      - ../frontend/:/app/staticfiles
+      - static:/app/staticfiles
   frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
-      - ../frontend/:/app/result_build/
+      - static:/result_build
   nginx:
     build:
       context: ../gateway
@@ -32,6 +33,6 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ../frontend/build:/usr/share/nginx/html/
+      - static:/staticfiles
       - ../docs/:/usr/share/nginx/html/api/docs/
       - media:/app/media
