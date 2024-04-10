@@ -10,7 +10,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(' ')
 
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED', '127.0.0.1').split(' ')
+CSRF_TRUSTED_ORIGINS = ['https://pleasehiretony.duckdns.org/']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -108,11 +108,6 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.AllowAny'],
         'user': ['rest_framework.permissions.AllowAny']
     }
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=160),
-    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 LANGUAGE_CODE = 'en-us'
