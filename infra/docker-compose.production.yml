@@ -19,14 +19,14 @@ services:
       - static:/app/staticfiles
   frontend:
     image: r4zeel/foodgram_frontend
+    env_file: .env
     volumes:
-      - static:/app/result_build/
+      - static:/app/result_build
   gateway:
     image: r4zeel/foodgram_gateway
     env_file: .env
     ports:
-      - 8000:80
+      - 80:80
     volumes:
       - static:/staticfiles
-      - ../docs/:/usr/share/nginx/html/api/docs/
       - media:/app/media
