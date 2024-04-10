@@ -1,5 +1,4 @@
 from io import BytesIO
-import json
 
 from django.db.models import Value, Case, When, BooleanField, F
 from django.db.models.functions import Concat
