@@ -25,16 +25,23 @@ class RecipeAdmin(admin.ModelAdmin):
         'image',
         'get_ingredients',
         'get_tags',
-        'cooking_time'
+        'cooking_time',
+        'get_favorites_count'
     )
     filter_horizontal = ('tags',)
 
+    @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):
         return ' ,'.join(
             [ingredient.name for ingredient in obj.ingredients.all()]
         )
 
+    @admin.display(description='Тэги')
     def get_tags(self, obj):
         return ' ,'.join(
             [tag.name for tag in obj.tags.all()]
         )
+
+    @admin.display(description='Добавлений в избранное')
+    def get_favorites_count(self, obj):
+        return obj.favoriterecipe_set.all().count()
