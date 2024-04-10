@@ -13,12 +13,13 @@ class IngredientSearchFilter(filters.FilterSet):
 
 class RecipeSearchFilter(filters.FilterSet):
     author = filters.NumberFilter(field_name='author', lookup_expr='exact')
+    tags = filters.CharFilter(field_name='tags__slug', lookup_expr='exact')
     is_favorited = filters.BooleanFilter(method='get_bool_for_favorite')
     is_in_shopping_cart = filters.BooleanFilter(method='get_bool_for_cart')
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags', 'favoriterecipe', 'shoppingcartrecipe')
+        fields = ('author', 'tags__slug', 'favoriterecipe', 'shoppingcartrecipe')
 
     def get_bool_for_cart(self, queryset, name, value):
         user = self.request.user
