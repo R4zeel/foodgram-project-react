@@ -3,6 +3,7 @@ version: '3.3'
 volumes:
   pg_data:
   media:
+  static:
 
 services:
   db:
@@ -15,17 +16,17 @@ services:
     env_file: .env
     volumes:
       - media:/app/media
-      - ../frontend/:/app/staticfiles
+      - static:/app/staticfiles
   frontend:
     image: r4zeel/foodgram_frontend
     volumes:
-      - ../frontend/:/app/result_build/
+      - static:/app/result_build/
   gateway:
     image: r4zeel/foodgram_gateway
     env_file: .env
     ports:
       - 8000:80
     volumes:
-      - ../frontend/build:/usr/share/nginx/html/
+      - static:/staticfiles
       - ../docs/:/usr/share/nginx/html/api/docs/
       - media:/app/media
