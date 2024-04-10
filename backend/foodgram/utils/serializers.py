@@ -223,7 +223,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
         for item in attrs['ingredients']:
             if not Ingredient.objects.filter(id=item['id']).exists():
                 raise serializers.ValidationError('Ингредиента не существует')
-            if item['amount'] < 1:
+            if int(item['amount']) < 1:
                 raise serializers.ValidationError(
                     'Количество не может быть меньше одного'
                 )
