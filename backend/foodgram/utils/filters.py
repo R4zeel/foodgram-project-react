@@ -19,7 +19,12 @@ class RecipeSearchFilter(filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags__slug', 'favoriterecipe', 'shoppingcartrecipe')
+        fields = (
+            'author',
+            'tags__slug',
+            'favoriterecipe',
+            'shoppingcartrecipe'
+        )
 
     def get_bool_for_cart(self, queryset, name, value):
         user = self.request.user
