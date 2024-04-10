@@ -104,15 +104,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).annotate(
             ing_name=Concat(
                 F('ingredients__name'),
-                Value(' ,'),
+                Value(', '),
                 F('ingredients__measurement_unit')
             )
         )
-        output = {item['ing_name']: 0 for item in queryset}
-        for item in queryset:
-            output[f'{item['ing_name']}'] += item['amount']
-        bytes_data = json.dumps(output, ensure_ascii=False).encode('utf-8')
-        buffer = BytesIO(bytes_data)
+        output_string = ''
+        output_string = ''.join(
+            [f'{item['ing_name']} - {item['amount']} \n' for item in queryset]
+        )
+        buffer = BytesIO(str.encode(output_string))
         return FileResponse(buffer, filename='test.txt', as_attachment=True)
 
 
