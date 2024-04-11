@@ -117,16 +117,16 @@ class RecipeIngredient(models.Model):
 
 
 class FavoriteRecipe(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     user = models.ForeignKey(ApiUser, on_delete=models.CASCADE)
+    relation = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.recipe.name
+        return self.relation.name
 
 
 class ShoppingCartRecipe(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     user = models.ForeignKey(ApiUser, on_delete=models.CASCADE)
+    relation = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.recipe.name
+        return self.relation.name

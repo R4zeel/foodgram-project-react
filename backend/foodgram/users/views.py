@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
-from utils.methods import detail_post_method
+from utils.methods import detail_post_method, detail_delete_method
 from utils.permissions import IsAuthenticatedOrReadOnly
 from utils.serializers import (ObtainTokenSerializer,
                                SubscriptionSerializerForWrite,
@@ -94,6 +94,7 @@ class SubscribeViewSet(mixins.CreateModelMixin,
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
+    model_name = Subscription
 
     def get_queryset(self):
         queryset = ApiUser.objects.all().annotate(
@@ -111,7 +112,7 @@ class SubscribeViewSet(mixins.CreateModelMixin,
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.request.method not in permissions.SAFE_METHODS:
-            context.update({'subscription_id': self.kwargs['pk']})
+            context.update({'relation_id': self.kwargs['pk']})
         return context
 
     def get_serializer_class(self):
@@ -129,10 +130,4 @@ class SubscribeViewSet(mixins.CreateModelMixin,
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        Subscription.objects.filter(
-            user=self.request.user,
-            subscription=pk
-        ).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return detail_delete_method(self, request, pk)

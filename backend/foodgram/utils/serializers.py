@@ -13,6 +13,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
+from .base_serializers import ForWriteSeirlizer, FavoriteCartSerializer
 from users.models import Subscription
 from api.models import (Recipe,
                         Ingredient,
@@ -87,42 +88,31 @@ class ObtainTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class SubscriptionSerializerForWrite(serializers.ModelSerializer):
+class SubscriptionSerializerForWrite(ForWriteSeirlizer):
     user = serializers.StringRelatedField(
         required=False,
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
-    subscription = serializers.PrimaryKeyRelatedField(
+    relation = serializers.PrimaryKeyRelatedField(
         read_only=True
     )
 
     class Meta:
         model = Subscription
-        fields = ('user', 'subscription')
+        fields = ('user', 'relation')
 
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
-        attrs['subscription_id'] = self.context['subscription_id']
-        subscription_user = get_object_or_404(
-            ApiUser,
-            id=self.context['subscription_id']
+        attrs['relation_id'] = self.context['relation_id']
+        relation_object = get_object_or_404(
+            ApiUser, id=attrs['relation_id']
         )
-        if self.context['request'].user == subscription_user:
+        if self.context['request'].user == relation_object:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
             )
-        subscription = self.Meta.model.objects.filter(
-            user=self.context['request'].user,
-            subscription=subscription_user
-        )
-        if self.context['request'].method == 'DELETE':
-            if not subscription.exists():
-                raise serializers.ValidationError('Связи не существует')
-            return attrs
-        if subscription.exists():
-            raise serializers.ValidationError('Связь уже существует')
-        return attrs
+        return super().validate(attrs)
 
     def to_representation(self, instance):
         return SubscriptionSerializerForRead(
@@ -130,7 +120,7 @@ class SubscriptionSerializerForWrite(serializers.ModelSerializer):
                 is_subscribed=Value(True),
                 recipes_count=Count('recipes')
             ).get(
-                id=instance.subscription_id
+                id=instance.relation_id
             ),
             context=self.context['request'].query_params
         ).data
@@ -225,8 +215,15 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Поле ингредиентов не может быть пустым'
             )
+        ingredient_id_count = []
         for item in attrs['ingredients']:
-            if not Ingredient.objects.filter(id=item['id']).exists():
+            ingredient_id_count.append(item['id'])
+            item['ingredient_id'] = item.pop('id')
+            if len(ingredient_id_count) != len(set(ingredient_id_count)):
+                raise serializers.ValidationError(
+                    'Ингредиенты не должны повторяться'
+                )
+            if not Ingredient.objects.filter(id=item['ingredient_id']).exists():
                 raise serializers.ValidationError('Ингредиента не существует')
             if int(item['amount']) < 1:
                 raise serializers.ValidationError(
@@ -240,13 +237,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         for ingredient in ingredients:
-            ingredient['ingredient_id'] = ingredient.pop('id')
-            try:
-                RecipeIngredient.objects.create(recipe=recipe, **ingredient)
-            except IntegrityError:
-                raise serializers.ValidationError(
-                    'В рецепте не может быть повторяющихся ингредиентов'
-                )
+            RecipeIngredient.objects.create(recipe=recipe, **ingredient)
         return recipe
 
     def update(self, instance, validated_data):
@@ -256,33 +247,18 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=instance.pk)
         recipe.tags.set(tags)
         for ingredient in ingredients:
-            recipe_ingredient = RecipeIngredient.objects.get(
-                recipe=recipe,
-                ingredient=ingredient['id']
-            )
-            try:
-                recipe_ingredient.id = ingredient['id']
-                recipe_ingredient.amount = ingredient['amount']
-                recipe_ingredient.save()
-            except IntegrityError:
-                raise serializers.ValidationError(
-                    'В рецепте не может быть повторяющихся ингредиентов'
-                )
+            RecipeIngredient.objects.filter(
+                recipe=recipe
+            ).delete()
+            RecipeIngredient.objects.create(recipe=recipe, **ingredient)
         return recipe
 
     def to_representation(self, instance):
         return RecipeSerializerForRead(instance=instance).data
 
 
-class FavoriteCartSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-
-
-class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
-    recipe = serializers.PrimaryKeyRelatedField(read_only=True)
+class FavoriteCartSerializerForWrite(ForWriteSeirlizer):
+    relation = serializers.PrimaryKeyRelatedField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault()
@@ -290,23 +266,12 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
 
     class Meta:
         model = None
-        fields = ('recipe', 'user',)
+        fields = ('user', 'relation')
 
     def validate(self, attrs):
         attrs['user'] = self.context['request'].user
-        attrs['recipe_id'] = self.context['recipe_id']
-        recipe = get_object_or_404(Recipe, id=self.context['recipe_id'])
-        added_recipe = self.Meta.model.objects.filter(
-            user=self.context['request'].user,
-            recipe=recipe
-        )
-        if self.context['request'].method == 'DELETE':
-            if not added_recipe.exists():
-                raise serializers.ValidationError('Связи не существует')
-            return attrs
-        if added_recipe.exists():
-            raise serializers.ValidationError('Рецепт уже добавлен')
-        return attrs
+        attrs['relation_id'] = self.context['relation_id']
+        return super().validate(attrs)
 
     def create(self, validated_data):
         try:
@@ -317,7 +282,7 @@ class FavoriteCartSerializerForWrite(serializers.ModelSerializer):
     def to_representation(self, instance):
         return FavoriteCartSerializer(
             instance=Recipe.objects.get(
-                id=instance.recipe_id
+                id=instance.relation_id
             )
         ).data
 

@@ -70,7 +70,7 @@ class Subscription(models.Model):
         related_name='subscriber',
         verbose_name='Подписчик'
     )
-    subscription = models.ForeignKey(
+    relation = models.ForeignKey(
         ApiUser,
         on_delete=models.CASCADE,
         related_name='subscriptions',

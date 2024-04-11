@@ -9,7 +9,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from utils.filters import IngredientSearchFilter, RecipeSearchFilter
-from utils.methods import detail_post_method, detail_delete_method
+from utils.methods import detail_post_method, detail_delete_method, get_cart_queryset
 from utils.permissions import IsAuthenticatedOrReadOnly, IsAuthor
 from .models import (Recipe,
                      Ingredient,
@@ -93,23 +93,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path='download_shopping_cart'
     )
     def download_shopping_cart(self, request):
-        queryset = Recipe.objects.filter(
-            shoppingcartrecipe__user=self.request.user,
-            id=F('shoppingcartrecipe__recipe')
-        ).values(
-            'name'
-        ).annotate(
-            amount=F('recipe_ingredients__amount')
-        ).annotate(
-            ing_name=Concat(
-                F('ingredients__name'),
-                Value(', '),
-                F('ingredients__measurement_unit')
-            )
-        )
+        queryset = get_cart_queryset(self.request.user)
         output_string = ''
         for item in queryset:
-            output_string += item['ing_name'] + ' - ' + item['amount'] + '\n'
+            output_string += item['ing_name'] + ' - ' + str(item['amount']) + '\n'
         # Такая конструкция не проходит pep8 при отправке на ревью
         # output_string = ''.join(
         #     [f'{item['ing_name']} - {item['amount']} \n'
@@ -127,7 +114,7 @@ class FavoriteCartViewSet(mixins.CreateModelMixin,
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context.update({'recipe_id': self.kwargs['pk']})
+        context.update({'relation_id': self.kwargs['pk']})
         return context
 
 
