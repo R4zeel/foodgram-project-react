@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from api.models import Recipe
 
+
 class ForWriteSeirlizer(serializers.ModelSerializer):
     class Meta:
         model = None

@@ -1,7 +1,6 @@
 from io import BytesIO
 
-from django.db.models import Value, Case, When, BooleanField, F
-from django.db.models.functions import Concat
+from django.db.models import Value, Case, When, BooleanField
 from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
@@ -9,8 +8,10 @@ from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from utils.filters import IngredientSearchFilter, RecipeSearchFilter
-from utils.methods import detail_post_method, detail_delete_method, get_cart_queryset
 from utils.permissions import IsAuthenticatedOrReadOnly, IsAuthor
+from utils.methods import (detail_post_method,
+                           detail_delete_method,
+                           get_cart_queryset)
 from .models import (Recipe,
                      Ingredient,
                      Tag,
@@ -96,7 +97,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         queryset = get_cart_queryset(self.request.user)
         output_string = ''
         for item in queryset:
-            output_string += item['ing_name'] + ' - ' + str(item['amount']) + '\n'
+            output_string += item['ing_name'] + ' - ' + str(
+                item['amount']
+            ) + '\n'
         # Такая конструкция не проходит pep8 при отправке на ревью
         # output_string = ''.join(
         #     [f'{item['ing_name']} - {item['amount']} \n'

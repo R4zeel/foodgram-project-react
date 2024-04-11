@@ -223,7 +223,9 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться'
                 )
-            if not Ingredient.objects.filter(id=item['ingredient_id']).exists():
+            if not Ingredient.objects.filter(
+                id=item['ingredient_id']
+            ).exists():
                 raise serializers.ValidationError('Ингредиента не существует')
             if int(item['amount']) < 1:
                 raise serializers.ValidationError(
