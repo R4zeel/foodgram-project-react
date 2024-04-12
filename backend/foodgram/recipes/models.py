@@ -1,12 +1,14 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from colorfield.fields import ColorField
 
 from api.constants import (LENGTH_FOR_CHARFIELD,
                            LENGTH_FOR_RECIPE_NAME,
                            LENGTH_FOR_TEXTFIELD,
                            MIN_VALIDATOR_VALUE,
-                           MIN_VALIDATOR_ERROR_MESSAGE)
+                           MIN_VALIDATOR_ERROR_MESSAGE,
+                           MAX_AMOUNT_VALUE,
+                           MAX_VALIDATOR_ERROR_MESSAGE)
 from users.models import ApiUser
 
 
@@ -102,6 +104,10 @@ class RecipeIngredient(models.Model):
                 MIN_VALIDATOR_VALUE,
                 MIN_VALIDATOR_ERROR_MESSAGE
             ),
+            MaxValueValidator(
+                MAX_AMOUNT_VALUE,
+                MAX_VALIDATOR_ERROR_MESSAGE
+            )
         )
     )
 

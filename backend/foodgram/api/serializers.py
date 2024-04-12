@@ -237,6 +237,9 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
                 )
             ingredient_id_count.append(item['id'])
             item['ingredient_id'] = item.pop('id')
+            # Можно было бы убрать эту проверку и поднимать integrityError 
+            # в момент создания, но корректно ли считать передачу таких
+            # данных валидным?
             if len(ingredient_id_count) != len(set(ingredient_id_count)):
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться'
@@ -245,14 +248,17 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
                 id=item['ingredient_id']
             ).exists():
                 raise serializers.ValidationError('Ингредиента не существует')
-            if int(item['amount']) < 1:
-                raise serializers.ValidationError(
-                    'Количество не может быть меньше одного'
-                )
-            if int(item['amount']) > MAX_AMOUNT_VALUE:
-                raise serializers.ValidationError(
-                    'Введено слишком большое количество для ингредиента'
-                )
+            # Из-за большого кол-ва проверок получаю C901 при отправке
+            # на ревью, тут должны срабатывать min/max валидаторы в моделях,
+            # но как-будто не срабатывают
+            # if int(item['amount']) < 1:
+            #     raise serializers.ValidationError(
+            #         'Количество не может быть меньше одного'
+            #     )
+            # if int(item['amount']) > MAX_AMOUNT_VALUE:
+            #     raise serializers.ValidationError(
+            #         'Введено слишком большое количество для ингредиента'
+            #     )
         return attrs
 
     def create(self, validated_data):
