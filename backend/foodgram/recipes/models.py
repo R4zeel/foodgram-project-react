@@ -58,9 +58,10 @@ class Tag(models.Model):
         max_length=LENGTH_FOR_CHARFIELD,
         verbose_name='Название'
     )
-    color = ColorField(default='#FFFFFF')
+    color = ColorField(default='#FFFFFF', unique=True)
     slug = models.SlugField(
-        verbose_name='Слаг'
+        verbose_name='Слаг',
+        unique=True
     )
 
     class Meta:
@@ -84,6 +85,7 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        unique_together = ('name', 'measurement_unit')
 
     def __str__(self):
         return self.name
@@ -123,6 +125,9 @@ class FavoriteRecipe(models.Model):
     def __str__(self):
         return self.relation.name
 
+    class Meta:
+        unique_together = ('user', 'relation')
+
 
 class ShoppingCartRecipe(models.Model):
     user = models.ForeignKey(ApiUser, on_delete=models.CASCADE)
@@ -130,3 +135,6 @@ class ShoppingCartRecipe(models.Model):
 
     def __str__(self):
         return self.relation.name
+
+    class Meta:
+        unique_together = ('user', 'relation')

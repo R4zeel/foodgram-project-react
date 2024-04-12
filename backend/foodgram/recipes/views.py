@@ -3,6 +3,7 @@ from io import BytesIO
 from django.db.models import Value, Case, When, BooleanField
 from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -52,6 +53,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ).order_by('-id')
     serializer_class = RecipeSerializerForRead
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeSearchFilter
 
@@ -116,7 +118,10 @@ class FavoriteCartViewSet(mixins.CreateModelMixin,
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context.update({'relation_id': self.kwargs['pk']})
+        try:
+            context.update({'relation_id': int(self.kwargs['pk'])})
+        except ValueError:
+            raise ValueError('Введен некорректный ID')
         return context
 
 

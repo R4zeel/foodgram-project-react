@@ -123,7 +123,10 @@ class SubscribeViewSet(mixins.CreateModelMixin,
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.request.method not in permissions.SAFE_METHODS:
-            context.update({'relation_id': self.kwargs['pk']})
+            try:
+                context.update({'relation_id': int(self.kwargs['pk'])})
+            except ValueError:
+                raise ValueError('Введен некорректный ID')
         return context
 
     def get_serializer_class(self):
