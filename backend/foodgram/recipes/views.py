@@ -4,7 +4,6 @@ from django.db.models import Value, Case, When, BooleanField
 from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from api.filters import IngredientSearchFilter, RecipeSearchFilter
@@ -55,7 +54,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeSearchFilter
-    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -100,18 +98,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        queryset = get_cart_queryset(self.request.user)
-        output_string = ''
-        for item in queryset:
-            output_string += item['ing_name'] + ' - ' + str(
-                item['amount']
-            ) + '\n'
+        result = get_cart_queryset(self.request.user)
         # Такая конструкция не проходит pep8 при отправке на ревью
         # output_string = ''.join(
         #     [f'{item['ing_name']} - {item['amount']} \n'
         #      for item in queryset]
         # )
-        buffer = BytesIO(str.encode(output_string))
+        buffer = BytesIO(str.encode(result))
         return FileResponse(buffer, filename='test.txt', as_attachment=True)
 
 

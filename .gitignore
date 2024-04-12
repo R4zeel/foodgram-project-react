@@ -135,3 +135,5 @@ frontend/admin
 frontend/colorfield
 frontend/rest_framework
 frontend/api
+
+pyrightconfig.json

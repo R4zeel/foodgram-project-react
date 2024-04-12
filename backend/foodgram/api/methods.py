@@ -35,7 +35,14 @@ def get_cart_queryset(user):
         ing_name=Concat(
             F('ingredients__name'),
             Value(', '),
-            F('ingredients__measurement_unit')
+            F('ingredients__measurement_unit'),
+            Value(':')
         )
     )
-    return queryset
+    output = {item['ing_name']: 0 for item in queryset}
+    output_str = ''
+    for item in queryset:
+        output[f'{item['ing_name']}'] += item['amount']
+    for key, value in output.items():
+        output_str += ' '.join((key, str(value), '\n'))
+    return output_str

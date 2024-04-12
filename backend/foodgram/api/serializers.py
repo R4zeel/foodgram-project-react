@@ -15,7 +15,9 @@ from rest_framework import serializers
 
 from .base_serializers import ForWriteSeirlizer, FavoriteCartSerializer
 from users.models import Subscription
-from api.constants import LENGTH_FOR_CHARFIELD, LENGTH_FOR_EMAIL
+from api.constants import (LENGTH_FOR_CHARFIELD,
+                           LENGTH_FOR_EMAIL,
+                           MAX_AMOUNT_VALUE)
 from recipes.models import (Recipe,
                             Ingredient,
                             Tag,
@@ -138,7 +140,7 @@ class SubscriptionSerializerForWrite(ForWriteSeirlizer):
             ).get(
                 id=instance.relation_id
             ),
-            context=self.context['request'].query_params
+            context=self.context['request']
         ).data
 
 
@@ -210,13 +212,18 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
     def validate(self, attrs):
         try:
             attrs['ingredients'] = self.initial_data['ingredients']
+        except KeyError:
+            raise serializers.ValidationError(
+                'Запрос должен содержать поле ингредиентов'
+            )
+        try:
             if len(attrs['tags']) != len(set(attrs['tags'])):
                 raise serializers.ValidationError(
                     'Тэги не должны повторяться'
                 )
         except KeyError:
             raise serializers.ValidationError(
-                'Запрос должен содержать все необходимые поля'
+                'Запрос должен содержать поле тэгов'
             )
         if not attrs['ingredients']:
             raise serializers.ValidationError(
@@ -224,6 +231,10 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             )
         ingredient_id_count = []
         for item in attrs['ingredients']:
+            if not item:
+                raise serializers.ValidationError(
+                    'Поле ингредиента должно содержать его ID и количество'
+                )
             ingredient_id_count.append(item['id'])
             item['ingredient_id'] = item.pop('id')
             if len(ingredient_id_count) != len(set(ingredient_id_count)):
@@ -237,6 +248,10 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             if int(item['amount']) < 1:
                 raise serializers.ValidationError(
                     'Количество не может быть меньше одного'
+                )
+            if int(item['amount']) > MAX_AMOUNT_VALUE:
+                raise serializers.ValidationError(
+                    'Введено слишком большое количество для ингредиента'
                 )
         return attrs
 
@@ -326,9 +341,12 @@ class SubscriptionSerializerForRead(serializers.ModelSerializer):
 
     def get_recipes(self, instance):
         user = ApiUser.objects.get(id=instance.pk)
-        if self.context:
-            limit = int(self.context['recipes_limit'])
-            queryset = user.recipes.all()[:limit]
-        else:
+        if not self.context:
             queryset = user.recipes.all()
+        else:
+            if 'recipes_limit' in self.context.query_params:
+                limit = int(self.context.query_params['recipes_limit'])
+                queryset = user.recipes.all()[:limit]
+            else:
+                queryset = user.recipes.all()
         return FavoriteCartSerializer(queryset, many=True).data

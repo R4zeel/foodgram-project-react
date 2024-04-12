@@ -69,9 +69,10 @@ class ApiUserViewSet(UserViewSet):
         )
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = SubscriptionSerializerForRead(page, many=True)
+            serializer = SubscriptionSerializerForRead(
+                page, many=True, context=self.request
+            )
             return self.get_paginated_response(serializer.data)
-
         serializer = SubscriptionSerializerForRead(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
