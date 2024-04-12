@@ -13,8 +13,8 @@ from .models import Subscription, ApiUser
 from api.methods import detail_post_method, detail_delete_method
 from api.permissions import IsAuthenticatedOrReadOnly
 from api.serializers import (ObtainTokenSerializer,
-                               SubscriptionSerializerForWrite,
-                               SubscriptionSerializerForRead)
+                             SubscriptionSerializerForWrite,
+                             SubscriptionSerializerForRead)
 
 
 class ApiUserViewSet(UserViewSet):
@@ -36,7 +36,6 @@ class ApiUserViewSet(UserViewSet):
             ).order_by('id')
             return queryset
         return super().get_queryset()
-        
 
     @action(
         methods=['GET'],

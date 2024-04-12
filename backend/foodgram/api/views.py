@@ -10,20 +10,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import IngredientSearchFilter, RecipeSearchFilter
 from .permissions import IsAuthenticatedOrReadOnly, IsAuthor
 from .methods import (detail_post_method,
-                           detail_delete_method,
-                           get_cart_queryset)
+                      detail_delete_method,
+                      get_cart_queryset)
 from recipes.models import (Recipe,
-                     Ingredient,
-                     Tag,
-                     FavoriteRecipe,
-                     ShoppingCartRecipe,)
+                            Ingredient,
+                            Tag,
+                            FavoriteRecipe,
+                            ShoppingCartRecipe,)
 from .serializers import (RecipeSerializerForRead,
-                               IngredientSerializer,
-                               TagSerializer,
-                               RecipeSerializerForWrite,
-                               FavoriteSerializerForWrite,
-                               FavoriteCartSerializer,
-                               CartSerializerForWrite)
+                          IngredientSerializer,
+                          TagSerializer,
+                          RecipeSerializerForWrite,
+                          FavoriteSerializerForWrite,
+                          FavoriteCartSerializer,
+                          CartSerializerForWrite)
 
 
 class ListViewSet(mixins.ListModelMixin,

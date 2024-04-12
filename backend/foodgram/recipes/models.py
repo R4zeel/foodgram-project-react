@@ -3,10 +3,10 @@ from django.core.validators import MinValueValidator
 from colorfield.fields import ColorField
 
 from api.constants import (LENGTH_FOR_CHARFIELD,
-                             LENGTH_FOR_RECIPE_NAME,
-                             LENGTH_FOR_TEXTFIELD,
-                             MIN_VALIDATOR_VALUE,
-                             MIN_VALIDATOR_ERROR_MESSAGE)
+                           LENGTH_FOR_RECIPE_NAME,
+                           LENGTH_FOR_TEXTFIELD,
+                           MIN_VALIDATOR_VALUE,
+                           MIN_VALIDATOR_ERROR_MESSAGE)
 from users.models import ApiUser
 
 
