@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from django.db.models import F, Value
 from django.db.models.functions import Concat
 
-from api.models import Recipe
+from recipes.models import Recipe
 
 
 def detail_post_method(self, request, pk):

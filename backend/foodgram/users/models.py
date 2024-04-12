@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
-from utils.constants import LENGTH_FOR_CHARFIELD, LENGTH_FOR_EMAIL
+from api.constants import LENGTH_FOR_CHARFIELD, LENGTH_FOR_EMAIL
 
 
 class ApiUser(AbstractUser):

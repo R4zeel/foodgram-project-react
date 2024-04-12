@@ -15,7 +15,7 @@ from rest_framework import serializers
 
 from .base_serializers import ForWriteSeirlizer, FavoriteCartSerializer
 from users.models import Subscription
-from api.models import (Recipe,
+from recipes.models import (Recipe,
                         Ingredient,
                         Tag,
                         RecipeIngredient,

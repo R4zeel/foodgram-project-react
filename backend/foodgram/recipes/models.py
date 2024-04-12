@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from colorfield.fields import ColorField
 
-from utils.constants import (LENGTH_FOR_CHARFIELD,
+from api.constants import (LENGTH_FOR_CHARFIELD,
                              LENGTH_FOR_RECIPE_NAME,
                              LENGTH_FOR_TEXTFIELD,
                              MIN_VALIDATOR_VALUE,
@@ -35,7 +35,7 @@ class Recipe(models.Model):
         'Tag',
         verbose_name='Тэги',
     )
-    cooking_time = models.PositiveSmallIntegerField(
+    cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
         validators=(
             MinValueValidator(
@@ -92,7 +92,7 @@ class Ingredient(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.PositiveSmallIntegerField(
+    amount = models.PositiveIntegerField(
         verbose_name='Количество',
         # не работает?
         validators=(

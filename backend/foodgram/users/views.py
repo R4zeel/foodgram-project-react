@@ -10,9 +10,9 @@ from rest_framework.authtoken.models import Token
 from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
-from utils.methods import detail_post_method, detail_delete_method
-from utils.permissions import IsAuthenticatedOrReadOnly
-from utils.serializers import (ObtainTokenSerializer,
+from api.methods import detail_post_method, detail_delete_method
+from api.permissions import IsAuthenticatedOrReadOnly
+from api.serializers import (ObtainTokenSerializer,
                                SubscriptionSerializerForWrite,
                                SubscriptionSerializerForRead)
 
@@ -23,17 +23,20 @@ class ApiUserViewSet(UserViewSet):
     filter_backends = (DjangoFilterBackend,)
 
     def get_queryset(self):
-        queryset = ApiUser.objects.all().annotate(
-            is_subscribed=Case(
-                When(
-                    subscriptions__user__exact=self.request.user.id,
-                    then=Value(True)
-                ),
-                default=Value(False),
-                output_field=BooleanField()
-            )
-        ).order_by('id')
-        return queryset
+        if self.request.user.is_authenticated:
+            queryset = ApiUser.objects.all().annotate(
+                is_subscribed=Case(
+                    When(
+                        subscriptions__user__exact=self.request.user.id,
+                        then=Value(True)
+                    ),
+                    default=Value(False),
+                    output_field=BooleanField()
+                )
+            ).order_by('id')
+            return queryset
+        return super().get_queryset()
+        
 
     @action(
         methods=['GET'],

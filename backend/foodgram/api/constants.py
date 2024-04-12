@@ -12,7 +12,7 @@ LENGTH_FOR_EMAIL = 254
 LENGTH_FOR_RECIPE_NAME = 200
 """Длина поля Name рецепта."""
 
-API_APP_LABEL = 'api'
+RECIPES_APP_LABEL = 'recipes'
 """Название приложения для вызова класса модели."""
 
 MIN_VALIDATOR_VALUE = 1

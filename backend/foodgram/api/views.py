@@ -7,17 +7,17 @@ from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
-from utils.filters import IngredientSearchFilter, RecipeSearchFilter
-from utils.permissions import IsAuthenticatedOrReadOnly, IsAuthor
-from utils.methods import (detail_post_method,
+from .filters import IngredientSearchFilter, RecipeSearchFilter
+from .permissions import IsAuthenticatedOrReadOnly, IsAuthor
+from .methods import (detail_post_method,
                            detail_delete_method,
                            get_cart_queryset)
-from .models import (Recipe,
+from recipes.models import (Recipe,
                      Ingredient,
                      Tag,
                      FavoriteRecipe,
                      ShoppingCartRecipe,)
-from utils.serializers import (RecipeSerializerForRead,
+from .serializers import (RecipeSerializerForRead,
                                IngredientSerializer,
                                TagSerializer,
                                RecipeSerializerForWrite,

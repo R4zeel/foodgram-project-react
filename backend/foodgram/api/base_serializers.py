@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models import Recipe
+from recipes.models import Recipe
 
 
 class ForWriteSeirlizer(serializers.ModelSerializer):

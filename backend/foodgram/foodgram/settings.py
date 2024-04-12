@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'default-key')
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(' ')
 
@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'colorfield',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',
-    'utils.apps.UtilsConfig',
+    'recipes.apps.RecipesConfig',
 ]
 
 MIDDLEWARE = [
@@ -99,9 +99,9 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'user_create': 'utils.serializers.ApiUserSerializerForWrite',
-        'user': 'utils.serializers.ApiUserSerializerForRead',
-        'current_user': 'utils.serializers.ApiUserSerializerForRead'
+        'user_create': 'api.serializers.ApiUserSerializerForWrite',
+        'user': 'api.serializers.ApiUserSerializerForRead',
+        'current_user': 'api.serializers.ApiUserSerializerForRead'
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny'],
