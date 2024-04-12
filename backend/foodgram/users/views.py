@@ -23,7 +23,6 @@ class ApiUserViewSet(UserViewSet):
     ).order_by('-id')
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
-    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
