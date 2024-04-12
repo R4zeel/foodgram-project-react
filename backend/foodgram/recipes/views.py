@@ -7,23 +7,23 @@ from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .filters import IngredientSearchFilter, RecipeSearchFilter
-from .permissions import IsAuthenticatedOrReadOnly, IsAuthor
-from .methods import (detail_post_method,
-                      detail_delete_method,
-                      get_cart_queryset)
+from api.filters import IngredientSearchFilter, RecipeSearchFilter
+from api.permissions import IsAuthenticatedOrReadOnly, IsAuthor
+from api.methods import (detail_post_method,
+                         detail_delete_method,
+                         get_cart_queryset)
 from recipes.models import (Recipe,
                             Ingredient,
                             Tag,
                             FavoriteRecipe,
                             ShoppingCartRecipe,)
-from .serializers import (RecipeSerializerForRead,
-                          IngredientSerializer,
-                          TagSerializer,
-                          RecipeSerializerForWrite,
-                          FavoriteSerializerForWrite,
-                          FavoriteCartSerializer,
-                          CartSerializerForWrite)
+from api.serializers import (RecipeSerializerForRead,
+                             IngredientSerializer,
+                             TagSerializer,
+                             RecipeSerializerForWrite,
+                             FavoriteSerializerForWrite,
+                             FavoriteCartSerializer,
+                             CartSerializerForWrite)
 
 
 class ListViewSet(mixins.ListModelMixin,

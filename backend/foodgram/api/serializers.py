@@ -15,6 +15,7 @@ from rest_framework import serializers
 
 from .base_serializers import ForWriteSeirlizer, FavoriteCartSerializer
 from users.models import Subscription
+from api.constants import LENGTH_FOR_CHARFIELD, LENGTH_FOR_EMAIL
 from recipes.models import (Recipe,
                             Ingredient,
                             Tag,
@@ -22,6 +23,15 @@ from recipes.models import (Recipe,
                             FavoriteRecipe,
                             ShoppingCartRecipe,
                             ApiUser)
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+        return super().to_internal_value(data)
 
 
 class ApiUserSerializerForRead(serializers.ModelSerializer):
@@ -65,8 +75,14 @@ class SetPasswordSerializer(serializers.Serializer):
 
 
 class ObtainTokenSerializer(serializers.Serializer):
-    email = serializers.CharField(max_length=128, required=True)
-    password = serializers.CharField(max_length=128, required=True)
+    email = serializers.CharField(
+        max_length=LENGTH_FOR_EMAIL,
+        required=True
+    )
+    password = serializers.CharField(
+        max_length=LENGTH_FOR_CHARFIELD,
+        required=True
+    )
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -124,15 +140,6 @@ class SubscriptionSerializerForWrite(ForWriteSeirlizer):
             ),
             context=self.context['request'].query_params
         ).data
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
