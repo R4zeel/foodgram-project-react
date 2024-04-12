@@ -16,8 +16,7 @@ from rest_framework import serializers
 from .base_serializers import ForWriteSeirlizer, FavoriteCartSerializer
 from users.models import Subscription
 from api.constants import (LENGTH_FOR_CHARFIELD,
-                           LENGTH_FOR_EMAIL,
-                           MAX_AMOUNT_VALUE)
+                           LENGTH_FOR_EMAIL)
 from recipes.models import (Recipe,
                             Ingredient,
                             Tag,
@@ -237,7 +236,7 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
                 )
             ingredient_id_count.append(item['id'])
             item['ingredient_id'] = item.pop('id')
-            # Можно было бы убрать эту проверку и поднимать integrityError 
+            # Можно было бы убрать эту проверку и поднимать integrityError
             # в момент создания, но корректно ли считать передачу таких
             # данных валидным?
             if len(ingredient_id_count) != len(set(ingredient_id_count)):
