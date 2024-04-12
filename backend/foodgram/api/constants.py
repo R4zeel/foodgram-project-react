@@ -3,6 +3,9 @@
 LENGTH_FOR_CHARFIELD = 150
 """Длина поля CharField."""
 
+LEN_ERROR_MESSAGE = f'Длина строки не может превышать {LENGTH_FOR_CHARFIELD}'
+"""Сообщение об ошибке при превышении длины строки."""
+
 LENGTH_FOR_TEXTFIELD = 500
 """Длина поля TextField."""
 

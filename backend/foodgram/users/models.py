@@ -1,8 +1,11 @@
 from django.db import models
+from django.core.validators import MaxLengthValidator
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
-from api.constants import LENGTH_FOR_CHARFIELD, LENGTH_FOR_EMAIL
+from api.constants import (LENGTH_FOR_CHARFIELD,
+                           LENGTH_FOR_EMAIL,
+                           LEN_ERROR_MESSAGE)
 
 
 class ApiUser(AbstractUser):
@@ -31,6 +34,12 @@ class ApiUser(AbstractUser):
     password = models.CharField(
         max_length=LENGTH_FOR_CHARFIELD,
         verbose_name='Пароль',
+        validators=(
+            MaxLengthValidator(
+                LENGTH_FOR_CHARFIELD,
+                LEN_ERROR_MESSAGE
+            ),
+        )
     )
     first_name = models.CharField(
         max_length=LENGTH_FOR_CHARFIELD,

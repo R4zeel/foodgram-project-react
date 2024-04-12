@@ -11,31 +11,39 @@ from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
 from api.methods import detail_post_method, detail_delete_method
-from api.permissions import IsAuthenticatedOrReadOnly
+from api.permissions import IsAuthenticatedOrReadOnly, IsAuthor
 from api.serializers import (ObtainTokenSerializer,
                              SubscriptionSerializerForWrite,
                              SubscriptionSerializerForRead)
 
 
 class ApiUserViewSet(UserViewSet):
-    queryset = ApiUser.objects.all()
-    pagination_class = LimitOffsetPagination
+    queryset = ApiUser.objects.all().annotate(
+        is_subscribed=Value(False)
+    ).order_by('-id')
     filter_backends = (DjangoFilterBackend,)
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = ApiUser.objects.all().annotate(
-                is_subscribed=Case(
-                    When(
-                        subscriptions__user__exact=self.request.user.id,
-                        then=Value(True)
-                    ),
-                    default=Value(False),
-                    output_field=BooleanField()
-                )
-            ).order_by('id')
-            return queryset
-        return super().get_queryset()
+        if not self.request.user.is_authenticated:
+            return self.queryset
+        queryset = ApiUser.objects.all().annotate(
+            is_subscribed=Case(
+                When(
+                    subscriptions__user__exact=self.request.user.id,
+                    then=Value(True)
+                ),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+        ).order_by('-id')
+        return queryset
+
+    def get_permissions(self):
+        if self.request.method == 'PATCH' or self.request.method == 'DELETE':
+            return [IsAuthor()]
+        return [permission() for permission in self.permission_classes]
 
     @action(
         methods=['GET'],
@@ -51,7 +59,8 @@ class ApiUserViewSet(UserViewSet):
     @action(
         methods=['GET'],
         detail=False,
-        url_path='subscriptions'
+        url_path='subscriptions',
+        permission_classes=[permissions.IsAuthenticated],
     )
     def get_subscriptions(self, request, *args, **kwargs):
         queryset = self.get_queryset().annotate(

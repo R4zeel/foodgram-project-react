@@ -47,7 +47,10 @@ class TagViewSet(ListViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.all().annotate(
+        is_favorited=Value(False),
+        is_in_shopping_cart=Value(False)
+    ).order_by('-id')
     serializer_class = RecipeSerializerForRead
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -55,6 +58,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return self.queryset
         queryset = Recipe.objects.all().annotate(
             is_favorited=Case(
                 When(
@@ -91,7 +96,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         methods=['GET'],
         detail=False,
-        url_path='download_shopping_cart'
+        url_path='download_shopping_cart',
+        permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
         queryset = get_cart_queryset(self.request.user)
