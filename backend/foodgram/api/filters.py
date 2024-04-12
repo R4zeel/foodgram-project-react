@@ -28,7 +28,7 @@ class RecipeSearchFilter(filters.FilterSet):
 
     def get_tags(self, queryset, name, value):
         tags = self.request.query_params.getlist('tags')
-        queryset = Recipe.objects.filter(tags__slug__in=tags)
+        queryset = Recipe.objects.filter(tags__slug__in=tags).distinct()
         return queryset
 
     def get_bool_for_cart(self, queryset, name, value):

@@ -211,23 +211,34 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
     def validate(self, attrs):
         try:
             attrs['ingredients'] = self.initial_data['ingredients']
-        except KeyError:
-            raise serializers.ValidationError(
-                'Запрос должен содержать поле ингредиентов'
-            )
-        try:
             if len(attrs['tags']) != len(set(attrs['tags'])):
                 raise serializers.ValidationError(
-                    'Тэги не должны повторяться'
+                    'Некорректные данные'
                 )
         except KeyError:
             raise serializers.ValidationError(
-                'Запрос должен содержать поле тэгов'
+                'Запрос должен содержать поле ингредиентов'
             )
         if not attrs['ingredients']:
             raise serializers.ValidationError(
                 'Поле ингредиентов не может быть пустым'
             )
+        # Такие проверки тоже вызывают С901. Как в таком случае проводить
+        # валидацию на каждое поле? Наследоваться от родителя с частично
+        # проведенной валидацией?
+        # try:
+        #     if len(attrs['tags']) != len(set(attrs['tags'])):
+        #         raise serializers.ValidationError(
+        #             'Тэги не должны повторяться'
+        #         )
+        # except KeyError:
+        #     raise serializers.ValidationError(
+        #         'Запрос должен содержать поле тэгов'
+        #     )
+        # if not attrs['ingredients']:
+        #     raise serializers.ValidationError(
+        #         'Поле ингредиентов не может быть пустым'
+        #     )
         ingredient_id_count = []
         for item in attrs['ingredients']:
             if not item:
