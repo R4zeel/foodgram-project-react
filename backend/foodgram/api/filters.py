@@ -28,12 +28,16 @@ class RecipeSearchFilter(filters.FilterSet):
 
     def get_bool_for_cart(self, queryset, name, value):
         user = self.request.user
+        if not user.is_authenticated:
+            return Recipe.objects.none()
         if value and user.is_authenticated:
             queryset = queryset.filter(shoppingcartrecipe__user=user)
         return queryset
 
     def get_bool_for_favorite(self, queryset, name, value):
         user = self.request.user
+        if not user.is_authenticated:
+            return Recipe.objects.none()
         if value and user.is_authenticated:
             queryset = queryset.filter(favoriterecipe__user=user)
         return queryset
