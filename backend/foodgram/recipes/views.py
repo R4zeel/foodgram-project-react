@@ -3,7 +3,7 @@ from io import BytesIO
 from django.db.models import Value, Case, When, BooleanField
 from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -53,7 +53,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ).order_by('-id')
     serializer_class = RecipeSerializerForRead
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = PageNumberPagination
+    pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeSearchFilter
 
