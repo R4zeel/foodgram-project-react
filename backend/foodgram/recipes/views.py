@@ -3,12 +3,12 @@ from io import BytesIO
 from django.db.models import Value, Case, When, BooleanField
 from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
 from api.filters import IngredientSearchFilter, RecipeSearchFilter
 from api.permissions import IsAuthenticatedOrReadOnly, IsAuthor
+from api.paginators import RecipePagination
 from api.methods import (detail_post_method,
                          detail_delete_method,
                          get_cart_queryset)
@@ -53,7 +53,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ).order_by('-id')
     serializer_class = RecipeSerializerForRead
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = LimitOffsetPagination
+    pagination_class = RecipePagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeSearchFilter
 
