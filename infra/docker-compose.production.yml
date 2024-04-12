@@ -34,6 +34,8 @@ services:
     volumes:
       - static:/staticfiles
       - media:/media
+      # Описан volume для доков и location до них в нгинкс, но они не подгружаются, 
+      # со статикой джанго такая-же проблема, при том что в контейнере они сохраняются в корректных папках
       - ../docs/:/docfiles
     depends_on:
       - backend
