@@ -42,7 +42,7 @@ def get_cart_queryset(user):
     output = {item['ing_name']: 0 for item in queryset}
     output_str = ''
     for item in queryset:
-        output[f'{item['ing_name']}'] += item['amount']
+        output[item['ing_name']] += item['amount']
     for key, value in output.items():
         output_str += ' '.join((key, str(value), '\n'))
     return output_str
