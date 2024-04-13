@@ -4,6 +4,7 @@ volumes:
   pg_data:
   media:
   static:
+  docs:
 
 services:
   db:
@@ -17,6 +18,7 @@ services:
     volumes:
       - media:/app/media
       - static:/app/staticfiles
+      - docs:/app/static/data/docs
     depends_on:
       - db
   frontend:
@@ -36,6 +38,6 @@ services:
       - media:/media
       # Описан volume для доков и location до них в нгинкс, но они не подгружаются, 
       # со статикой джанго такая-же проблема, при том что в контейнере они сохраняются в корректных папках
-      - ../docs/:/docfiles
+      - docs:/docfiles
     depends_on:
       - backend

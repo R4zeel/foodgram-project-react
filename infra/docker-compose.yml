@@ -4,6 +4,7 @@ volumes:
   pg_data:
   media:
   static:
+  docs:
 
 services:
   db:
@@ -19,6 +20,7 @@ services:
     volumes:
       - media:/app/media
       - static:/app/staticfiles
+      - docs:/app/static/data/docs
   frontend:
     build:
       context: ../frontend
@@ -34,5 +36,5 @@ services:
       - "80:80"
     volumes:
       - static:/staticfiles
-      - ../docs/:/docfiles
+      - docs:/app/static/data/docs
       - media:/media
