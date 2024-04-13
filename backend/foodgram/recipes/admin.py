@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Tag, Ingredient, Recipe
+from .models import RecipeIngredient, Tag, Ingredient, Recipe
 
 
 @admin.register(Tag)
@@ -14,6 +14,11 @@ class TagAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
+
+
+class IngredientInLine(admin.TabularInline):
+    model = RecipeIngredient
+    extra = 1
 
 
 @admin.register(Recipe)
@@ -30,6 +35,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'created_at'
     )
     filter_horizontal = ('tags',)
+    inlines = [IngredientInLine]
 
     @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):
