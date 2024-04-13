@@ -1,4 +1,4 @@
-version: '3.3'
+version: "3.3"
 
 volumes:
   pg_data:
@@ -17,7 +17,7 @@ services:
     env_file: .env
     volumes:
       - media:/app/media
-      - static:/app/staticfiles
+      - static:/backend_static
       - docs:/app/static/data/docs
     depends_on:
       - db
@@ -36,8 +36,7 @@ services:
     volumes:
       - static:/staticfiles
       - media:/media
-      # Описан volume для доков и location до них в нгинкс, но они не подгружаются, 
-      # со статикой джанго такая-же проблема, при том что в контейнере они сохраняются в корректных папках
+      # Все образы удалил/пересобрал, доки не грузятся
       - docs:/docfiles
     depends_on:
       - backend

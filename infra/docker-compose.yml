@@ -19,7 +19,7 @@ services:
     env_file: .env
     volumes:
       - media:/app/media
-      - static:/app/staticfiles
+      - static:/backend_static
       - docs:/app/static/data/docs
   frontend:
     build:
@@ -36,5 +36,5 @@ services:
       - "80:80"
     volumes:
       - static:/staticfiles
-      - docs:/docfiles
+      - docs:/usr/share/nginx/html
       - media:/media

@@ -4,19 +4,25 @@
 циркулярных зависимостей.
 """
 import base64
+from inspect import Attribute
 
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
+from django.core import exceptions as django_exceptions
 from django.db.models import Value, Count
 from django.db.utils import IntegrityError
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
+from rest_framework.settings import api_settings
+from djoser.serializers import SetPasswordSerializer
 
 from .base_serializers import ForWriteSeirlizer, FavoriteCartSerializer
 from users.models import Subscription
 from api.constants import (LENGTH_FOR_CHARFIELD,
-                           LENGTH_FOR_EMAIL)
+                           LENGTH_FOR_EMAIL,
+                           MAX_AMOUNT_VALUE)
 from recipes.models import (Recipe,
                             Ingredient,
                             Tag,
@@ -51,7 +57,10 @@ class ApiUserSerializerForRead(serializers.ModelSerializer):
 
 
 class ApiUserSerializerForWrite(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        write_only=True,
+        max_length=LENGTH_FOR_CHARFIELD
+    )
 
     class Meta:
         model = ApiUser
@@ -66,13 +75,23 @@ class ApiUserSerializerForWrite(serializers.ModelSerializer):
 
     def validate(self, attrs):
         password = attrs.get('password')
+        try:
+            validate_password(password)
+        except django_exceptions.ValidationError as error:
+            pass_error = serializers.as_serializer_error(error)
+            raise serializers.ValidationError(
+                {
+                    "password": pass_error[api_settings.NON_FIELD_ERRORS_KEY]
+                }
+            )
         attrs['password'] = make_password(password)
         return attrs
 
 
-class SetPasswordSerializer(serializers.Serializer):
-    current_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+class SetPasswordSerializer(SetPasswordSerializer):
+    new_password = serializers.CharField(
+        max_length=LENGTH_FOR_CHARFIELD,
+    )
 
 
 class ObtainTokenSerializer(serializers.Serializer):
@@ -195,6 +214,8 @@ class RecipeSerializerForRead(serializers.ModelSerializer):
 
 class RecipeSerializerForWrite(serializers.ModelSerializer):
     image = Base64ImageField()
+    ingredients = serializers.ListField(required=True, allow_empty=False)
+    tags = serializers.ListField(required=True, allow_empty=False)
 
     class Meta:
         model = Recipe
@@ -209,66 +230,24 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        try:
-            attrs['ingredients'] = self.initial_data['ingredients']
-            if len(attrs['tags']) != len(set(attrs['tags'])):
-                raise serializers.ValidationError(
-                    'Некорректные данные'
-                )
-        except KeyError:
+        if len(attrs['tags']) != len(set(attrs['tags'])):
             raise serializers.ValidationError(
-                'Запрос должен содержать поле ингредиентов'
+                'Тэги не должны повторяться'
             )
-        if not attrs['ingredients']:
-            raise serializers.ValidationError(
-                'Поле ингредиентов не может быть пустым'
-            )
-        # Такие проверки тоже вызывают С901. Как в таком случае проводить
-        # валидацию на каждое поле? Наследоваться от родителя с частично
-        # проведенной валидацией?
-        # try:
-        #     if len(attrs['tags']) != len(set(attrs['tags'])):
-        #         raise serializers.ValidationError(
-        #             'Тэги не должны повторяться'
-        #         )
-        # except KeyError:
-        #     raise serializers.ValidationError(
-        #         'Запрос должен содержать поле тэгов'
-        #     )
-        # if not attrs['ingredients']:
-        #     raise serializers.ValidationError(
-        #         'Поле ингредиентов не может быть пустым'
-        #     )
-        ingredient_id_count = []
         for item in attrs['ingredients']:
             if not item:
                 raise serializers.ValidationError(
                     'Поле ингредиента должно содержать его ID и количество'
                 )
-            ingredient_id_count.append(item['id'])
             item['ingredient_id'] = item.pop('id')
-            # Можно было бы убрать эту проверку и поднимать integrityError
-            # в момент создания, но корректно ли считать передачу таких
-            # данных валидным?
-            if len(ingredient_id_count) != len(set(ingredient_id_count)):
+            if int(item['amount']) < 1:
                 raise serializers.ValidationError(
-                    'Ингредиенты не должны повторяться'
+                    'Количество не может быть меньше одного'
                 )
-            if not Ingredient.objects.filter(
-                id=item['ingredient_id']
-            ).exists():
-                raise serializers.ValidationError('Ингредиента не существует')
-            # Из-за большого кол-ва проверок получаю C901 при отправке
-            # на ревью, тут должны срабатывать min/max валидаторы в моделях,
-            # но как-будто не срабатывают
-            # if int(item['amount']) < 1:
-            #     raise serializers.ValidationError(
-            #         'Количество не может быть меньше одного'
-            #     )
-            # if int(item['amount']) > MAX_AMOUNT_VALUE:
-            #     raise serializers.ValidationError(
-            #         'Введено слишком большое количество для ингредиента'
-            #     )
+            if int(item['amount']) > MAX_AMOUNT_VALUE:
+                raise serializers.ValidationError(
+                    'Введено слишком большое количество для ингредиента'
+                )
         return attrs
 
     def create(self, validated_data):
@@ -277,7 +256,13 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         for ingredient in ingredients:
-            RecipeIngredient.objects.create(recipe=recipe, **ingredient)
+            RecipeIngredient.objects.filter(recipe=recipe).delete()
+            try:
+                RecipeIngredient.objects.create(recipe=recipe, **ingredient)
+            except IntegrityError:
+                raise serializers.ValidationError(
+                    'Ингредиенты не должны повторяться'
+                )
         return recipe
 
     def update(self, instance, validated_data):

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from colorfield.fields import ColorField
+from django.db.utils import IntegrityError
 
 from api.constants import (LENGTH_FOR_CHARFIELD,
                            LENGTH_FOR_RECIPE_NAME,
@@ -46,13 +47,20 @@ class Recipe(models.Model):
             ),
         )
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.ingredients:
+            raise IntegrityError('Поле ингредиентов не может быть пустым')
+        return super().save(*args, **kwargs)
 
 
 class Tag(models.Model):
@@ -72,6 +80,11 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+
+    def save(self, *args, **kwargs):
+        self.color = self.color.lower()
+        return super().save(*args, **kwargs)
 
 
 class Ingredient(models.Model):
@@ -98,7 +111,7 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
-        # не работает?
+        # TODO: валидатор не работает
         validators=(
             MinValueValidator(
                 MIN_VALIDATOR_VALUE,

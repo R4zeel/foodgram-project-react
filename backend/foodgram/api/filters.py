@@ -34,15 +34,21 @@ class RecipeSearchFilter(filters.FilterSet):
     def get_bool_for_cart(self, queryset, name, value):
         user = self.request.user
         if not user.is_authenticated:
-            return Recipe.objects.none()
+            return queryset
+        # Тут должен был стоять distinct на прошлом ревью, почему-то
+        # отправилась неактуальная версия
         if value and user.is_authenticated:
-            queryset = queryset.filter(shoppingcartrecipe__user=user)
+            queryset = queryset.filter(
+                shoppingcartrecipe__user=user
+            ).distinct()
         return queryset
 
     def get_bool_for_favorite(self, queryset, name, value):
         user = self.request.user
         if not user.is_authenticated:
-            return Recipe.objects.none()
+            return queryset
         if value and user.is_authenticated:
-            queryset = queryset.filter(favoriterecipe__user=user)
+            queryset = queryset.filter(
+                favoriterecipe__user=user
+            ).distinct()
         return queryset

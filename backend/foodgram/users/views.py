@@ -1,7 +1,6 @@
 from django.db.models import Value, Case, When, BooleanField, Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, permissions, mixins
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,7 +10,9 @@ from djoser.views import UserViewSet
 
 from .models import Subscription, ApiUser
 from api.methods import detail_post_method, detail_delete_method
-from api.permissions import IsAuthenticatedOrReadOnly, IsAuthor
+from api.paginators import LimitParamPagination
+from api.permissions import (IsAuthenticatedOrReadOnly,
+                             IsAccountOwner)
 from api.serializers import (ObtainTokenSerializer,
                              SubscriptionSerializerForWrite,
                              SubscriptionSerializerForRead)
@@ -22,7 +23,8 @@ class ApiUserViewSet(UserViewSet):
         is_subscribed=Value(False)
     ).order_by('-id')
     filter_backends = (DjangoFilterBackend,)
-    pagination_class = LimitOffsetPagination
+    pagination_class = LimitParamPagination
+    # http_method_names = ['get', 'post']
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -41,7 +43,7 @@ class ApiUserViewSet(UserViewSet):
 
     def get_permissions(self):
         if self.request.method == 'PATCH' or self.request.method == 'DELETE':
-            return [IsAuthor()]
+            return [IsAccountOwner()]
         return [permission() for permission in self.permission_classes]
 
     @action(
@@ -104,7 +106,7 @@ class SubscribeViewSet(mixins.CreateModelMixin,
     serializer_class = SubscriptionSerializerForRead
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    pagination_class = LimitOffsetPagination
+    pagination_class = LimitParamPagination
     model_name = Subscription
 
     def get_queryset(self):
@@ -123,10 +125,7 @@ class SubscribeViewSet(mixins.CreateModelMixin,
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.request.method not in permissions.SAFE_METHODS:
-            try:
-                context.update({'relation_id': int(self.kwargs['pk'])})
-            except ValueError:
-                raise ValueError('Введен некорректный ID')
+            context.update({'relation_id': self.kwargs['pk']})
         return context
 
     def get_serializer_class(self):
@@ -140,8 +139,8 @@ class SubscribeViewSet(mixins.CreateModelMixin,
         url_path='subscribe'
     )
     def subscribe(self, request, pk):
-        return detail_post_method(self, request, pk)
+        return detail_post_method(self, request, self.kwargs['pk'])
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, pk):
-        return detail_delete_method(self, request, pk)
+        return detail_delete_method(self, request, self.kwargs['pk'])

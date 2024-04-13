@@ -26,9 +26,10 @@ class RecipeAdmin(admin.ModelAdmin):
         'get_ingredients',
         'get_tags',
         'cooking_time',
-        'get_favorites_count'
+        'get_favorites_count',
+        'created_at'
     )
-    filter_horizontal = ('tags',)
+    filter_horizontal = ('tags', 'id')
 
     @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):

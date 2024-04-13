@@ -4,9 +4,22 @@ from django.db.models import F, Value
 from django.db.models.functions import Concat
 
 from recipes.models import Recipe
+from users.models import Subscription
 
 
 def detail_post_method(self, request, pk):
+    try:
+        int(pk)
+    except ValueError:
+        if self.model_name == Subscription:
+            return Response(
+                'Пользователь не найден',
+                status=status.HTTP_404_NOT_FOUND
+            )
+        return Response(
+            'Введён некорректный ID',
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     serializer = self.get_serializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -14,6 +27,18 @@ def detail_post_method(self, request, pk):
 
 
 def detail_delete_method(self, request, pk):
+    try:
+        int(pk)
+    except ValueError:
+        if self.model_name == Subscription:
+            return Response(
+                'Пользователь не найден',
+                status=status.HTTP_404_NOT_FOUND
+            )
+        return Response(
+            'Введён некорректный ID',
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     serializer = self.get_serializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     self.model_name.objects.filter(

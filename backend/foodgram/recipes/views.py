@@ -5,10 +5,11 @@ from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.routers import Response
 
 from api.filters import IngredientSearchFilter, RecipeSearchFilter
 from api.permissions import IsAuthenticatedOrReadOnly, IsAuthor
-from api.paginators import RecipePagination
+from api.paginators import LimitParamPagination
 from api.methods import (detail_post_method,
                          detail_delete_method,
                          get_cart_queryset)
@@ -50,10 +51,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all().annotate(
         is_favorited=Value(False),
         is_in_shopping_cart=Value(False)
-    ).order_by('-id')
+    ).order_by('-created_at')
     serializer_class = RecipeSerializerForRead
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = RecipePagination
+    pagination_class = LimitParamPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeSearchFilter
 
@@ -118,10 +119,7 @@ class FavoriteCartViewSet(mixins.CreateModelMixin,
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        try:
-            context.update({'relation_id': int(self.kwargs['pk'])})
-        except ValueError:
-            raise ValueError('Введен некорректный ID')
+        context.update({'relation_id': self.kwargs['pk']})
         return context
 
 
@@ -142,11 +140,11 @@ class FavoriteRecipeViewSet(FavoriteCartViewSet):
         url_path='favorite'
     )
     def add_to_favorites(self, request, pk):
-        return detail_post_method(self, request, pk)
+        return detail_post_method(self, request, self.kwargs['pk'])
 
     @add_to_favorites.mapping.delete
     def delete_favorite(self, request, pk):
-        return detail_delete_method(self, request, pk)
+        return detail_delete_method(self, request, self.kwargs['pk'])
 
 
 class ShoppingCartRecipeViewSet(FavoriteCartViewSet):
@@ -168,8 +166,8 @@ class ShoppingCartRecipeViewSet(FavoriteCartViewSet):
         url_path='shopping_cart'
     )
     def add_to_cart(self, request, pk):
-        return detail_post_method(self, request, pk)
+        return detail_post_method(self, request, self.kwargs['pk'])
 
     @add_to_cart.mapping.delete
     def delete_favorite(self, request, pk):
-        return detail_delete_method(self, request, pk)
+        return detail_delete_method(self, request, self.kwargs['pk'])
