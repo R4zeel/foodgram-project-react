@@ -81,7 +81,6 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
-
     def save(self, *args, **kwargs):
         self.color = self.color.lower()
         return super().save(*args, **kwargs)

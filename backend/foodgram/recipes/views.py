@@ -5,7 +5,6 @@ from django.http import FileResponse
 from rest_framework import viewsets, mixins, filters, permissions
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.routers import Response
 
 from api.filters import IngredientSearchFilter, RecipeSearchFilter
 from api.permissions import IsAuthenticatedOrReadOnly, IsAuthor

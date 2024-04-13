@@ -29,7 +29,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'get_favorites_count',
         'created_at'
     )
-    filter_horizontal = ('tags', 'id')
+    filter_horizontal = ('tags',)
 
     @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):

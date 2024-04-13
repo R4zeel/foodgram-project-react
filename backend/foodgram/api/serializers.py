@@ -4,7 +4,6 @@
 циркулярных зависимостей.
 """
 import base64
-from inspect import Attribute
 
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
