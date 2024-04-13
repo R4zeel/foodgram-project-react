@@ -233,6 +233,8 @@ class RecipeSerializerForWrite(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Тэги не должны повторяться'
             )
+        for tag in attrs['tags']:
+            _ = get_object_or_404(Tag, id=tag)
         for item in attrs['ingredients']:
             if not item:
                 raise serializers.ValidationError(
