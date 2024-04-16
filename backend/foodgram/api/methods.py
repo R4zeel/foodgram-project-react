@@ -47,7 +47,7 @@ def detail_delete_method(self, request, pk):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-def get_cart_queryset(user):
+def get_cart_list(user):
     queryset = Recipe.objects.filter(
         shoppingcartrecipe__user=user,
         id=F('shoppingcartrecipe__relation')

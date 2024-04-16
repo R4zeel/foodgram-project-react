@@ -11,7 +11,7 @@ from api.permissions import IsAuthenticatedOrReadOnly, IsAuthor
 from api.paginators import LimitParamPagination
 from api.methods import (detail_post_method,
                          detail_delete_method,
-                         get_cart_queryset)
+                         get_cart_list)
 from recipes.models import (Recipe,
                             Ingredient,
                             Tag,
@@ -33,12 +33,14 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = IngredientSearchFilter
     ordering_fields = ('name',)
+    pagination_class = None
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (permissions.AllowAny,)
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -98,7 +100,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        result = get_cart_queryset(self.request.user)
+        result = get_cart_list(self.request.user)
         buffer = BytesIO(str.encode(result))
         return FileResponse(buffer, filename='test.txt', as_attachment=True)
 
