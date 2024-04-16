@@ -1,7 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
-from django.db.models import F, Value
-from django.db.models.functions import Concat
+from django.db.models import F, Sum
 
 from recipes.models import Recipe
 from users.models import Subscription
@@ -53,21 +52,19 @@ def get_cart_queryset(user):
         shoppingcartrecipe__user=user,
         id=F('shoppingcartrecipe__relation')
     ).values(
-        'name'
+        'ingredients__name',
+        'ingredients__measurement_unit'
     ).annotate(
-        amount=F('recipe_ingredients__amount')
-    ).annotate(
-        ing_name=Concat(
-            F('ingredients__name'),
-            Value(', '),
-            F('ingredients__measurement_unit'),
-            Value(':')
-        )
+        amount=Sum('recipe_ingredients__amount')
     )
-    output = {item['ing_name']: 0 for item in queryset}
-    output_str = ''
+    output = {}
     for item in queryset:
-        output[item['ing_name']] += item['amount']
+        output[item['ingredients__name']] = (
+            str(
+                item['amount']
+            ) + item['ingredients__measurement_unit']
+        )
+    output_str = ''
     for key, value in output.items():
-        output_str += ' '.join((key, str(value), '\n'))
+        output_str += ' '.join((key, value, '\n'))
     return output_str

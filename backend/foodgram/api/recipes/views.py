@@ -17,33 +17,28 @@ from recipes.models import (Recipe,
                             Tag,
                             FavoriteRecipe,
                             ShoppingCartRecipe,)
-from api.serializers import (RecipeSerializerForRead,
-                             IngredientSerializer,
-                             TagSerializer,
-                             RecipeSerializerForWrite,
-                             FavoriteSerializerForWrite,
-                             FavoriteCartSerializer,
-                             CartSerializerForWrite)
+from .serializers import (RecipeSerializerForRead,
+                          IngredientSerializer,
+                          TagSerializer,
+                          RecipeSerializerForWrite,
+                          FavoriteSerializerForWrite,
+                          FavoriteCartSerializer,
+                          CartSerializerForWrite)
 
 
-class ListViewSet(mixins.ListModelMixin,
-                  mixins.RetrieveModelMixin,
-                  viewsets.GenericViewSet):
-    permission_classes = (permissions.AllowAny,)
-    pagination_class = None
-
-
-class IngredientViewSet(ListViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    permission_classes = (permissions.AllowAny,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = IngredientSearchFilter
     ordering_fields = ('name',)
 
 
-class TagViewSet(ListViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -56,6 +51,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = LimitParamPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeSearchFilter
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -89,7 +85,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeSerializerForRead
 
     def get_permissions(self):
-        if self.request.method == 'PATCH' or self.request.method == 'DELETE':
+        if self.request.method == 'POST':
+            return [IsAuthenticatedOrReadOnly()]
+        if self.request.method not in permissions.SAFE_METHODS:
             return [IsAuthor()]
         return [permission() for permission in self.permission_classes]
 
@@ -101,11 +99,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         result = get_cart_queryset(self.request.user)
-        # Такая конструкция не проходит pep8 при отправке на ревью
-        # output_string = ''.join(
-        #     [f'{item['ing_name']} - {item['amount']} \n'
-        #      for item in queryset]
-        # )
         buffer = BytesIO(str.encode(result))
         return FileResponse(buffer, filename='test.txt', as_attachment=True)
 

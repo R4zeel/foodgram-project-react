@@ -8,14 +8,13 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from djoser.views import UserViewSet
 
-from .models import Subscription, ApiUser
+from users.models import Subscription, ApiUser
 from api.methods import detail_post_method, detail_delete_method
 from api.paginators import LimitParamPagination
-from api.permissions import (IsAuthenticatedOrReadOnly,
-                             IsAccountOwner)
-from api.serializers import (ObtainTokenSerializer,
-                             SubscriptionSerializerForWrite,
-                             SubscriptionSerializerForRead)
+from api.permissions import IsAuthenticatedOrReadOnly
+from .serializers import (ObtainTokenSerializer,
+                          SubscriptionSerializerForWrite,
+                          SubscriptionSerializerForRead)
 
 
 class ApiUserViewSet(UserViewSet):
@@ -24,7 +23,9 @@ class ApiUserViewSet(UserViewSet):
     ).order_by('-id')
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitParamPagination
-    # http_method_names = ['get', 'post']
+    # Оставил только get и post, судя по спецификации в проекте вообще
+    # не должно быть возможности редактировать и удалять профили пользователей
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -40,11 +41,6 @@ class ApiUserViewSet(UserViewSet):
             )
         ).order_by('-id')
         return queryset
-
-    def get_permissions(self):
-        if self.request.method == 'PATCH' or self.request.method == 'DELETE':
-            return [IsAccountOwner()]
-        return [permission() for permission in self.permission_classes]
 
     @action(
         methods=['GET'],

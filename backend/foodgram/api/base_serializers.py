@@ -4,9 +4,6 @@ from recipes.models import Recipe
 
 
 class ForWriteSeirlizer(serializers.ModelSerializer):
-    class Meta:
-        model = None
-        fields = None
 
     def validate(self, attrs):
         relation = self.Meta.model.objects.filter(

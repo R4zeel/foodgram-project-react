@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'default-key')
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(' ')
 
@@ -99,10 +99,10 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'user_create': 'api.serializers.ApiUserSerializerForWrite',
-        'user': 'api.serializers.ApiUserSerializerForRead',
-        'current_user': 'api.serializers.ApiUserSerializerForRead',
-        'set_password': 'api.serializers.SetPasswordSerializer',
+        'user_create': 'api.users.serializers.ApiUserSerializerForWrite',
+        'user': 'api.users.serializers.ApiUserSerializerForRead',
+        'current_user': 'api.users.serializers.ApiUserSerializerForRead',
+        'set_password': 'api.users.serializers.SetPasswordSerializer',
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny'],

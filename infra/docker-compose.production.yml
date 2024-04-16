@@ -36,7 +36,6 @@ services:
     volumes:
       - static:/staticfiles
       - media:/media
-      # Все образы удалил/пересобрал, доки не грузятся
-      - docs:/docfiles
+      - docs:/usr/share/nginx/html/api/docs
     depends_on:
       - backend

@@ -75,9 +75,10 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
-    def save(self, *args, **kwargs):
+    def clean(self):
+        # Тут отдельно поднимать исключение судя по всему не нужно,
+        # статускод 500 больше не выбрасывается
         self.color = self.color.lower()
-        return super().save(*args, **kwargs)
 
 
 class Ingredient(models.Model):
@@ -93,7 +94,15 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        unique_together = ('name', 'measurement_unit')
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    'name',
+                    'measurement_unit'
+                ],
+                name='unique ingredients for a recipe'
+            )
+        ]
 
     def __str__(self):
         return self.name
@@ -104,7 +113,6 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
-        # TODO: валидатор не работает
         validators=(
             MinValueValidator(
                 MIN_VALIDATOR_VALUE,
@@ -138,7 +146,12 @@ class FavoriteRecipe(models.Model):
         return self.relation.name
 
     class Meta:
-        unique_together = ('user', 'relation')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'relation'],
+                name='unique favorite'
+            )
+        ]
 
 
 class ShoppingCartRecipe(models.Model):
@@ -149,4 +162,9 @@ class ShoppingCartRecipe(models.Model):
         return self.relation.name
 
     class Meta:
-        unique_together = ('user', 'relation')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'relation'],
+                name='unique cart'
+            )
+        ]
