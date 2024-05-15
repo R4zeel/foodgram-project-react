@@ -23,8 +23,6 @@ class ApiUserViewSet(UserViewSet):
     ).order_by('-id')
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitParamPagination
-    # Оставил только get и post, судя по спецификации в проекте вообще
-    # не должно быть возможности редактировать и удалять профили пользователей
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
